@@ -24,7 +24,6 @@
           <include>README</include>
           <include>AUTHORS</include>
           <include>COPYING</include>
-          <include>INSTALL</include>
           <include>ChangeLog</include>
       </includes>
     </fileSet>
