@@ -1,0 +1,12 @@
+compiler/lexer/LexerException.class
+compiler/node/Token.class
+compiler/lexer/Lexer$State.class
+compiler/Main.class
+compiler/node/Switchable.class
+compiler/node/Node.class
+compiler/node/EOF.class
+compiler/analysis/Analysis.class
+compiler/node/TWhiteSpace.class
+compiler/lexer/Lexer.class
+compiler/analysis/AnalysisAdapter.class
+compiler/node/Switch.class
