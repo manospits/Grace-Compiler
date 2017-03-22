@@ -25,7 +25,7 @@ Helpers
   escapeseq = backslash 'n' | backslash 't' | backslash 'r'
               | backslash '0' | backslash backslash
               | backslash quote | backslash dquote
-              | backslash 'x' hexdigit hexdigit?;
+              | backslash 'x' hexdigit hexdigit;
   not_common_char = cr | lf | backslash | quote | dquote;
   common_char = [[[all - [cr+lf]]-[backslash + quote]]-dquote];
 
@@ -83,33 +83,52 @@ Ignored Tokens
   white_space,t_lf,t_cr,t_tab,t_l_comm;
 
 Productions
-/*program = {func_def} func_def;*/
 
-/*func_def = header local_def* block;*/
+    //<program> = <func-def>
+    program = func_def;
 
-header   = t_fun t_id t_l_par fpar_def header_semi_fpardef* t_r_par t_uddot ret_type;
-header_semi_fpardef = t_semi fpar_def;
+    //<func-def> = <header> (<local_def>)* <block>
+    func_def =  header local_def* ;/*block;*/ //TODO FIX ERROR
 
-fpar_def =
+    //<header> = "fun" <id> "("<fpar-def> (";" <fpar-def>)() ")" : <ret-type>
+    header   = t_fun t_id t_l_par fpar_def header_semi_fpardef* t_r_par t_uddot ret_type;
+    header_semi_fpardef = t_semi fpar_def;
+
+    //["ref"] <id> (","<id>)* ":" <fpar-type>
+    fpar_def =
         {withref}    t_id id_comma* t_uddot fpar_type |
         {withoutref} t_ref t_id id_comma* t_uddot fpar_type;
-id_comma = t_comma t_id;
+    id_comma = t_comma t_id;
 
-data_type =
+    //<data-type> = "int" | "char"
+    data_type =
             {int} t_int |
             {char} t_char;
 
-array_dec = t_l_ar t_number t_r_ar;
+    //<type> = <data-type> ("[" <int-const> "]")*
+    type = data_type array_dec*;
+    array_dec = t_l_ar t_number t_r_ar;
 
-type = data_type array_dec*;
-
-ret_type =
+    //<ret-type> <data-type> | "nothing"
+    ret_type =
             data_type |
             {nothing} t_nothing;
 
-fpar_type_t_ar_empty = t_l_ar t_r_ar;
-fpar_type_t_ar = t_l_ar t_number t_r_ar;
-fpar_type =
+    //<fpar-type> = <data-type> ["[" "]"] ( "[" <int-const> "]")*
+    fpar_type_t_ar_empty = t_l_ar t_r_ar;
+    fpar_type_t_ar = t_l_ar t_number t_r_ar;
+    fpar_type =
         {fpar_type_without_empty}    data_type fpar_type_t_ar* |
         {fpar_type_with_empty}   data_type fpar_type_t_ar_empty fpar_type_t_ar*;
 
+    //<local-def> = <func-def> | <func-decl> | <var-def>
+    local_def =
+        {func_def}   func_def  |
+        {func_decl}  func_decl |
+        {var_def}    var_def;
+
+    //<var-def> = "var" <id> (",",<id>)* ":" <type> ";"
+    var_def   = t_var t_id id_comma* t_uddot type t_semi;
+
+    //<func-decl> = <header> ";"
+    func_decl = header t_semi;
