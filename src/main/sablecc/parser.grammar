@@ -88,7 +88,7 @@ Productions
     program = func_def;
 
     //<func-def> = <header> (<local_def>)* <block>
-    func_def =  header local_def* ;/*block;*/ //TODO FIX ERROR
+    func_def =  header local_def* block;
 
     //<header> = "fun" <id> "("<fpar-def> (";" <fpar-def>)() ")" : <ret-type>
     header   = t_fun t_id t_l_par fpar_def header_semi_fpardef* t_r_par t_uddot ret_type;
@@ -132,3 +132,5 @@ Productions
 
     //<func-decl> = <header> ";"
     func_decl = header t_semi;
+
+    block = t_l_br t_r_br;
