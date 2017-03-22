@@ -174,3 +174,28 @@ Productions
             {func_call_type} func_call |
             {l_value_type} l_value     |
             {parebthesis} t_l_par expr t_r_par ;
+
+    //cond = "(" <cond> ")" | "not" <cond> | <cond> ("and" | "or" ) <cond>
+    //     | <expr> ("=" | "#" | "<" | ">" "<=" | ">=") <expr>
+
+    cond =
+        {cond_or}    cond t_or condand|
+        {cond_and}   condand;
+
+    condand =
+        {condand_and} condand t_and |
+        {cond_not}    condnot;
+
+    condnot = t_not cond_bottom;
+
+    cond_bottom =
+        {cond_equal}  [left]:expr t_s_equal  [right]:expr |
+        {cond_hash}   [left]:expr t_s_hash   [right]:expr |
+        {cond_bigger} [left]:expr t_s_bigger [right]:expr |
+        {cond_less}   [left]:expr t_s_less   [right]:expr |
+        {cond_leq}    [left]:expr t_s_leq    [right]:expr |
+        {cond_beq}    [left]:expr t_s_beq    [right]:expr |
+        {cond_par}    [left]:t_l_par cond t_r_par;
+
+
+
