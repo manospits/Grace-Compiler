@@ -133,4 +133,5 @@ Productions
     //<func-decl> = <header> ";"
     func_decl = header t_semi;
 
+    //<block> = "{" (<stmt>)* "}"
     block = t_l_br t_r_br;
