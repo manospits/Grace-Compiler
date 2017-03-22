@@ -28,6 +28,8 @@ Helpers
               | backslash 'x' hexdigit hexdigit;
   not_common_char = cr | lf | backslash | quote | dquote;
   common_char = [[[all - [cr+lf]]-[backslash + quote]]-dquote];
+  not_dollar = [all-'$'];
+  not_dollar_line_terminator = [not_dollar-[cr+lf]];
 
 Tokens
   white_space = white_space;
@@ -77,10 +79,11 @@ Tokens
   t_semi     = ';';
   t_uddot    = ':';
   t_larrow   = '<-';
-  t_l_comm   = '$' [all-[cr + lf]]* line_terminator ;
+  t_l_comm   = '$' (not_dollar_line_terminator+ [all-[cr + lf]]*)* line_terminator ;
+  t_ml_comm  = '$$' not_dollar* '$' ( not_dollar not_dollar* '$' )* '$';
 
 Ignored Tokens
-  white_space,t_lf,t_cr,t_tab,t_l_comm;
+  white_space,t_lf,t_cr,t_tab,t_ml_comm,t_l_comm;
 
 Productions
 
