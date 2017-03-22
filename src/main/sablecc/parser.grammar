@@ -137,7 +137,7 @@ Productions
     func_decl = header t_semi;
 
     //<block> = "{" (<stmt>)* "}"
-    block = t_l_br t_r_br;
+    block = t_l_br cond t_r_br;
 
     //<func-call> = <id> "(" [ <expr> ( "," <expr> ) *] ")"
     func_call = t_id t_l_par func_call_optional? t_r_par;
@@ -164,8 +164,8 @@ Productions
             {infixplusminus}       expr_ipm;
 
     expr_ipm =
-            {inplus}  t_s_plus  expr_m|
-            {inminus} t_s_minus expr_m|
+            {inplus}  t_s_plus  expr_bottom|
+            {inminus} t_s_minus expr_bottom|
             {bottom} expr_bottom;
 
     expr_bottom =
