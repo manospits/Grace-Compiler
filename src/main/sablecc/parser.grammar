@@ -20,7 +20,6 @@ Helpers
   uscore = '_';
   notstar = [all - '*'];
   notstarslash = [notstar - '/'];
-  c_comment = '/*' notstar* ('*'(notstarslash notstar*)?)* '*/';
   hexdigit = ['a' .. 'f'] | ['A' .. 'F'] | ['0' .. '9'];
   escapeseq = backslash 'n' | backslash 't' | backslash 'r'
               | backslash '0' | backslash backslash
@@ -33,9 +32,9 @@ Helpers
 
 Tokens
   white_space = white_space;
-  t_tab = tab;
-  t_lf = lf;
-  t_cr = cr;
+  t_tab      = tab;
+  t_lf       = lf;
+  t_cr       = cr;
   t_and      = 'and';
   t_char     = 'char';
   t_div      = 'div';
@@ -55,8 +54,8 @@ Tokens
   t_while    = 'while';
   t_id       = letter (letter | uscore | number)*;
   t_number   = (number)+;
-  t_inquote  = quote common_char quote | quote escapeseq quote;
-  t_indquote = dquote (common_char
+  t_char_con = quote common_char quote | quote escapeseq quote;
+  t_string  = dquote (common_char
                        | escapeseq )* dquote;
   t_s_plus   = '+';
   t_s_minus  = '-';
@@ -94,8 +93,9 @@ Productions
     func_def =  header local_def* block;
 
     //<header> = "fun" <id> "("<fpar-def> (";" <fpar-def>)() ")" : <ret-type>
-    header   = t_fun t_id t_l_par fpar_def header_semi_fpardef* t_r_par t_uddot ret_type;
+    header   = t_fun t_id t_l_par header_members? t_r_par t_uddot ret_type;
     header_semi_fpardef = t_semi fpar_def;
+    header_members = fpar_def header_semi_fpardef*;
 
     //["ref"] <id> (","<id>)* ":" <fpar-type>
     fpar_def =
@@ -114,7 +114,7 @@ Productions
 
     //<ret-type> <data-type> | "nothing"
     ret_type =
-            data_type |
+            {ret_data_type} data_type |
             {nothing} t_nothing;
 
     //<fpar-type> = <data-type> ["[" "]"] ( "[" <int-const> "]")*
@@ -138,3 +138,39 @@ Productions
 
     //<block> = "{" (<stmt>)* "}"
     block = t_l_br t_r_br;
+
+    //<func-call> = <id> "(" [ <expr> ( "," <expr> ) *] ")"
+    func_call = t_id t_l_par func_call_optional? t_r_par;
+    func_call_optional = expr comma_expr*;
+    comma_expr= t_comma expr;
+
+    //<l-value> = <id> | <string-literal> | <l-value> "[" <expr> "]"
+    l_value =
+        {l_value_id}       t_id     |
+        {l_value_string}   t_string |
+        {l_value_array}    l_value  t_l_ar expr t_r_ar;
+
+    //<expr> = <int-const> | <char-const> | <l-value> | <func-call> | "(" <expr> ")"
+    //       | ( "+" | "-" ) <expr> ("+" | "-" | "*" | "div" | "mod" ) <expr>
+    expr =
+            {plus}  expr t_s_plus  expr_m|
+            {minus} expr t_s_minus expr_m|
+            {multdivmod} expr_m;
+
+    expr_m =
+            {post_mult} expr_m t_s_star expr_ipm|
+            {post_div}  expr_m t_div    expr_ipm|
+            {post_mod}  expr_m t_mod    expr_ipm|
+            {infixplusminus}       expr_ipm;
+
+    expr_ipm =
+            {inplus}  t_s_plus  expr_m|
+            {inminus} t_s_minus expr_m|
+            {bottom} expr_bottom;
+
+    expr_bottom =
+            {const} t_number           |
+            {char} t_char_con          |
+            {func_call_type} func_call |
+            {l_value_type} l_value     |
+            {parebthesis} t_l_par expr t_r_par ;
