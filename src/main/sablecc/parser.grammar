@@ -186,7 +186,9 @@ Productions
         {condand_and} condand t_and |
         {cond_not}    condnot;
 
-    condnot = t_not cond_bottom;
+    condnot =
+        {condnot_not} t_not cond_bottom|
+        {cond_bottom} cond_bottom;
 
     cond_bottom =
         {cond_equal}  [left]:expr t_s_equal  [right]:expr |
