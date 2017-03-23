@@ -216,7 +216,7 @@ Productions
         {cond_and}   condand;
 
     condand =
-        {condand_and} condand t_and |
+        {condand_and} condand t_and condnot|
         {cond_not}    condnot;
 
     condnot =
