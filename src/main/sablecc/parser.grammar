@@ -136,8 +136,41 @@ Productions
     //<func-decl> = <header> ";"
     func_decl = header t_semi;
 
+    //<stmt> = ";" | <l-value> "<-" <expr> ";" | <block> | <func_call> ";"
+    //       | "if" <cond> "then" <stmt> [ "else" <stmt> ]
+    //       | "while" <cond> "do" <stmt> | return [<expr>] ";"
+    stmt =
+            {stmt_semi} t_semi                         |
+            {stmt_lvalue} l_value t_larrow expr t_semi |
+            {stmt_block} block                         |
+            {stmt_func_call} func_call t_semi          |
+            {stmt_if} if                               |
+            {stmt_return} t_return expr? t_semi        |
+            {stmt_while} while;
+
+    while = t_while cond t_do stmt;
+    while_else = t_while cond t_do stmt_else;
+
+    if = if_header if_trail;
+    if_header = t_if cond t_then;
+    if_trail =
+            {without_else} stmt |
+            {with_else} stmt_else t_else stmt;
+
+    stmt_else =
+            {stmt_else_semi} t_semi                         |
+            {stmt_else_lvalue} l_value t_larrow expr t_semi |
+            {stmt_else_block} block                         |
+            {stmt_else_func_call} func_call t_semi          |
+            {stmt_else_return} t_return expr? t_semi        |
+            {stmt_else_if} if_else                          |
+            {stmt_while} while_else;
+
+    if_else = if_header [then]:stmt_else t_else [else]:stmt_else;
+
+
     //<block> = "{" (<stmt>)* "}"
-    block = t_l_br cond t_r_br;
+    block = t_l_br stmt* t_r_br;
 
     //<func-call> = <id> "(" [ <expr> ( "," <expr> ) *] ")"
     func_call = t_id t_l_par func_call_optional? t_r_par;
