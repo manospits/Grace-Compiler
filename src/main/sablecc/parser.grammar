@@ -97,7 +97,7 @@ Productions
     header_semi_fpardef = t_semi fpar_def;
     header_members = fpar_def header_semi_fpardef*;
 
-    //["ref"] <id> (","<id>)* ":" <fpar-type>
+    //<fpar-def> = ["ref"] <id> (","<id>)* ":" <fpar-type>
     fpar_def = t_ref? t_id id_comma* t_uddot fpar_type;
     id_comma = t_comma t_id;
 
