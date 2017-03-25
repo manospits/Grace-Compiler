@@ -3,6 +3,7 @@ package compiler;
 import compiler.analysis.DepthFirstAdapter;
 import compiler.node.*;
 import java.io.*;
+import java.util.*;
 
 public class PrintingVisitor extends DepthFirstAdapter{
     int spaces=0;
@@ -64,6 +65,26 @@ public class PrintingVisitor extends DepthFirstAdapter{
         print_spaces();
         System.out.println("Fpar-def start");
         spaces+=1;
+        print_spaces();
+        System.out.printf("Ref : ");
+        if(node.getTRef() != null)
+        {
+            System.out.printf("Yes\n");
+        }
+        else{
+            System.out.printf("No\n");
+
+        }
+        print_spaces();
+        System.out.printf("IDs : %s", node.getTId().toString());
+        List<PIdComma> copy = new ArrayList<PIdComma>(node.getIdComma());
+        for(PIdComma e : copy)
+        {
+            System.out.printf("%s",e.toString());
+        }
+        System.out.println("");
+        print_spaces();
+        System.out.printf("Fpar-type : %s \n",node.getFparType().toString());
     }
 
     @Override
