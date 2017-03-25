@@ -98,9 +98,7 @@ Productions
     header_members = fpar_def header_semi_fpardef*;
 
     //["ref"] <id> (","<id>)* ":" <fpar-type>
-    fpar_def =
-        {withref}    t_id id_comma* t_uddot fpar_type |
-        {withoutref} t_ref t_id id_comma* t_uddot fpar_type;
+    fpar_def = t_ref? t_id id_comma* t_uddot fpar_type;
     id_comma = t_comma t_id;
 
     //<data-type> = "int" | "char"
@@ -118,11 +116,9 @@ Productions
             {nothing} t_nothing;
 
     //<fpar-type> = <data-type> ["[" "]"] ( "[" <int-const> "]")*
+    fpar_type = data_type fpar_type_t_ar_empty? fpar_type_t_ar* ;
     fpar_type_t_ar_empty = t_l_ar t_r_ar;
     fpar_type_t_ar = t_l_ar t_number t_r_ar;
-    fpar_type =
-        {fpar_type_without_empty}    data_type fpar_type_t_ar* |
-        {fpar_type_with_empty}   data_type fpar_type_t_ar_empty fpar_type_t_ar*;
 
     //<local-def> = <func-def> | <func-decl> | <var-def>
     local_def =
