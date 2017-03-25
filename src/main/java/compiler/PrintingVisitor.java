@@ -230,4 +230,20 @@ public class PrintingVisitor extends DepthFirstAdapter{
         print_spaces();
         System.out.printf("If end\n");
     }
+
+    @Override
+    public void inAFuncCallOptional(AFuncCallOptional node)
+    {
+        print_spaces();
+        System.out.println("Parameters :");
+        spaces+=1;
+    }
+
+    @Override
+    public void outAFuncCallOptional(AFuncCallOptional node)
+    {
+        spaces-=1;
+        print_spaces();
+        System.out.printf("Parameters end\n");
+    }
 }
