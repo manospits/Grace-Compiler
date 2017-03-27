@@ -185,6 +185,7 @@ public class PrintingVisitor extends DepthFirstAdapter{
         System.out.println("Func-call end");
     }
 
+    //stmt Assignment
     @Override
     public void inAStmtLvalueStmt(AStmtLvalueStmt node){
         print_spaces();
@@ -201,6 +202,7 @@ public class PrintingVisitor extends DepthFirstAdapter{
         System.out.printf("Assignment end\n");
     }
 
+    //stmt-else Assignment
     @Override
     public void inAStmtElseLvalueStmtElse(AStmtElseLvalueStmtElse node){
         print_spaces();
@@ -217,6 +219,7 @@ public class PrintingVisitor extends DepthFirstAdapter{
         System.out.printf("Assignment end\n");
     }
 
+    //if
     @Override
     public void inAIf(AIf node){
         print_spaces();
@@ -231,6 +234,7 @@ public class PrintingVisitor extends DepthFirstAdapter{
         System.out.printf("If end\n");
     }
 
+    //func call optional
     @Override
     public void inAFuncCallOptional(AFuncCallOptional node)
     {
@@ -246,4 +250,50 @@ public class PrintingVisitor extends DepthFirstAdapter{
         print_spaces();
         System.out.printf("Parameters end\n");
     }
+
+    //if header
+    @Override
+    public void inAIfHeader(AIfHeader node){
+        print_spaces();
+        System.out.println("If header start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outAIfHeader(AIfHeader node){
+        spaces-=1;
+        print_spaces();
+        System.out.println("If header end");
+    }
+
+    //if trail without else
+    @Override
+    public void inAWithoutElseIfTrail(AWithoutElseIfTrail node){
+        print_spaces();
+        System.out.println("If trail start (without else)");
+        spaces+=1;
+    }
+
+    @Override
+    public void outAWithoutElseIfTrail(AWithoutElseIfTrail node){
+        spaces-=1;
+        print_spaces();
+        System.out.println("If trail end (without else)");
+    }
+
+    //if trail with else
+    @Override
+    public void inAWithElseIfTrail(AWithElseIfTrail node){
+        print_spaces();
+        System.out.println("If trail start (with else)");
+        spaces+=1;
+    }
+
+    @Override
+    public void outAWithElseIfTrail(AWithElseIfTrail node){
+        spaces-=1;
+        print_spaces();
+        System.out.println("If trail end (with else)");
+    }
+
 }
