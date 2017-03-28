@@ -185,12 +185,24 @@ public class PrintingVisitor extends DepthFirstAdapter{
         System.out.println("Func-call end");
     }
 
-    //stmt Assignment
+    //semi
+    @Override
+    public void inAStmtSemiStmt(AStmtSemiStmt node) {
+        print_spaces();
+        spaces+=1;
+        System.out.println("stmt type:Semi");
+    }
+
+    @Override
+    public void outAStmtSemiStmt(AStmtSemiStmt node) {
+        spaces-=1;
+    }
+
     @Override
     public void inAStmtLvalueStmt(AStmtLvalueStmt node){
         print_spaces();
         spaces+=1;
-        System.out.println("Assignment");
+        System.out.println("stmt type:assignment start");
         print_spaces();
         System.out.printf("<l-value> : %s\n",node.getLValue().toString());
     }
@@ -199,15 +211,85 @@ public class PrintingVisitor extends DepthFirstAdapter{
     public void outAStmtLvalueStmt(AStmtLvalueStmt node){
         spaces-=1;
         print_spaces();
-        System.out.printf("Assignment end\n");
+        System.out.printf("stmt type:assignment end\n");
     }
 
-    //stmt-else Assignment
+    @Override
+    public void inAStmtBlockStmt(AStmtBlockStmt node){
+        print_spaces();
+        spaces+=1;
+        System.out.println("stmt type:block start");
+    }
+
+    @Override
+    public void outAStmtBlockStmt(AStmtBlockStmt node){
+        spaces-=1;
+        print_spaces();
+        System.out.printf("stmt type:block end\n");
+    }
+
+    @Override
+    public void inAStmtFuncCallStmt(AStmtFuncCallStmt node){
+        print_spaces();
+        spaces+=1;
+        System.out.println("stmt type:func-call start");
+    }
+
+    @Override
+    public void outAStmtFuncCallStmt(AStmtFuncCallStmt node){
+        spaces-=1;
+        print_spaces();
+        System.out.printf("stmt type:func-call end\n");
+    }
+
+    @Override
+    public void inAStmtIfStmt(AStmtIfStmt node){
+        print_spaces();
+        spaces+=1;
+        System.out.println("stmt type:if start");
+    }
+
+    @Override
+    public void outAStmtIfStmt(AStmtIfStmt node){
+        spaces-=1;
+        print_spaces();
+        System.out.printf("stmt type:if end\n");
+    }
+
+    @Override
+    public void inAStmtReturnStmt(AStmtReturnStmt node){
+        print_spaces();
+        spaces+=1;
+        System.out.println("stmt type:return expr? semi start");
+    }
+
+    @Override
+    public void outAStmtReturnStmt(AStmtReturnStmt node){
+        spaces-=1;
+        print_spaces();
+        System.out.printf("stmt type:return expr? semi end\n");
+    }
+
+    @Override
+    public void inAStmtWhileStmt(AStmtWhileStmt node){
+        print_spaces();
+        spaces+=1;
+        System.out.println("stmt type:while start");
+    }
+
+    @Override
+    public void outAStmtWhileStmt(AStmtWhileStmt node){
+        spaces-=1;
+        print_spaces();
+        System.out.printf("stmt type:while end\n");
+    }
+
+    //stmt-else
     @Override
     public void inAStmtElseLvalueStmtElse(AStmtElseLvalueStmtElse node){
         print_spaces();
         spaces+=1;
-        System.out.println("Stmt : Assignment");
+        System.out.println("stmt (else) type:assignment start");
         print_spaces();
         System.out.printf("<l-value> : %s\n",node.getLValue().toString());
     }
@@ -216,7 +298,77 @@ public class PrintingVisitor extends DepthFirstAdapter{
     public void outAStmtElseLvalueStmtElse(AStmtElseLvalueStmtElse node){
         spaces-=1;
         print_spaces();
-        System.out.printf("Assignment end\n");
+        System.out.printf("stmt (else) type:assignment end\n");
+    }
+
+    @Override
+    public void inAStmtElseBlockStmtElse(AStmtElseBlockStmtElse node){
+        print_spaces();
+        spaces+=1;
+        System.out.println("stmt (else) type:block start");
+    }
+
+    @Override
+    public void outAStmtElseBlockStmtElse(AStmtElseBlockStmtElse node){
+        spaces-=1;
+        print_spaces();
+        System.out.printf("stmt (else) type:block end\n");
+    }
+
+    @Override
+    public void inAStmtElseFuncCallStmtElse(AStmtElseFuncCallStmtElse node){
+        print_spaces();
+        spaces+=1;
+        System.out.println("stmt (else) type:func-call start");
+    }
+
+    @Override
+    public void outAStmtElseFuncCallStmtElse(AStmtElseFuncCallStmtElse node){
+        spaces-=1;
+        print_spaces();
+        System.out.printf("stmt (else) type:func-call end\n");
+    }
+
+    @Override
+    public void inAStmtElseIfStmtElse(AStmtElseIfStmtElse node){
+        print_spaces();
+        spaces+=1;
+        System.out.println("stmt (else) type:if start");
+    }
+
+    @Override
+    public void outAStmtElseIfStmtElse(AStmtElseIfStmtElse node){
+        spaces-=1;
+        print_spaces();
+        System.out.printf("stmt (else) type:if end\n");
+    }
+
+    @Override
+    public void inAStmtElseReturnStmtElse(AStmtElseReturnStmtElse node){
+        print_spaces();
+        spaces+=1;
+        System.out.println("stmt (else) type:return expr? semi start");
+    }
+
+    @Override
+    public void outAStmtElseReturnStmtElse(AStmtElseReturnStmtElse node){
+        spaces-=1;
+        print_spaces();
+        System.out.printf("stmt (else) type:return expr? semi end\n");
+    }
+
+    @Override
+    public void inAStmtElseWhileStmtElse(AStmtElseWhileStmtElse node){
+        print_spaces();
+        spaces+=1;
+        System.out.println("stmt (else) type:While start");
+    }
+
+    @Override
+    public void outAStmtElseWhileStmtElse(AStmtElseWhileStmtElse node){
+        spaces-=1;
+        print_spaces();
+        System.out.printf("stmt (else) type:while end\n");
     }
 
     //while

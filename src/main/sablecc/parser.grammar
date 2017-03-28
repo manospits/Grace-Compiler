@@ -160,7 +160,7 @@ Productions
             {stmt_else_func_call} func_call t_semi          |
             {stmt_else_return} t_return expr? t_semi        |
             {stmt_else_if} if_else                          |
-            {stmt_while} while_else;
+            {stmt_else_while} while_else;
 
     if_else = if_header [then]:stmt_else t_else [else]:stmt_else;
 
@@ -185,7 +185,7 @@ Productions
             {plus}  expr t_s_plus  expr_m|
             {minus} expr t_s_minus expr_m|
             {multdivmod} expr_m;
-    
+
     expr_m =
             {post_mult} expr_m t_s_star expr_ipm|
             {post_div}  expr_m t_div    expr_ipm|
