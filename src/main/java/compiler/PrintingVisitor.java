@@ -219,6 +219,35 @@ public class PrintingVisitor extends DepthFirstAdapter{
         System.out.printf("Assignment end\n");
     }
 
+    //while
+    @Override
+    public void inAWhile(AWhile node) {
+        print_spaces();
+        spaces+=1;
+        System.out.println("While start");
+    }
+
+    @Override
+    public void outAWhile(AWhile node) {
+        spaces-=1;
+        print_spaces();
+        System.out.printf("While end\n");
+    }
+
+    @Override
+    public void inAWhileElse(AWhileElse node) {
+        print_spaces();
+        spaces+=1;
+        System.out.println("While start (while-else)");
+    }
+
+    @Override
+    public void outAWhileElse(AWhileElse node) {
+        spaces-=1;
+        print_spaces();
+        System.out.printf("While end (while-else)\n");
+    }
+
     //if
     @Override
     public void inAIf(AIf node){
@@ -296,6 +325,60 @@ public class PrintingVisitor extends DepthFirstAdapter{
         System.out.println("If trail end (with else)");
     }
 
+    //lvalue
+    @Override
+    public void inALValueIdLValue(ALValueIdLValue node)
+    {
+        print_spaces();
+        System.out.println("l-value type:id start");
+        spaces+=1;
+        print_spaces();
+        System.out.printf("<id> : %s\n",node.getTId().toString());
+    }
+
+    @Override
+    public void outALValueIdLValue(ALValueIdLValue node)
+    {
+        spaces-=1;
+        print_spaces();
+        System.out.println("l-value type:id end");
+    }
+
+    @Override
+    public void inALValueStringLValue(ALValueStringLValue node)
+    {
+        print_spaces();
+        System.out.println("l-value type:string start");
+        spaces+=1;
+        print_spaces();
+        System.out.printf("<string> : %s\n",node.getTString().toString());
+    }
+
+    @Override
+    public void outALValueStringLValue(ALValueStringLValue node)
+    {
+        spaces-=1;
+        print_spaces();
+        System.out.println("l-value type:string end");
+    }
+
+    @Override
+    public void inALValueArrayLValue(ALValueArrayLValue node)
+    {
+        print_spaces();
+        System.out.println("l-value type:l-value [] start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outALValueArrayLValue(ALValueArrayLValue node)
+    {
+        spaces-=1;
+        print_spaces();
+        System.out.println("l-value type:l-value [] end");
+    }
+
+    //expr
     @Override
     public void inAPlusExpr(APlusExpr node){
         print_spaces();
@@ -324,6 +407,7 @@ public class PrintingVisitor extends DepthFirstAdapter{
         System.out.println("Expr type:minus end");
     }
 
+    //expr_m
     @Override
     public void inAPostMultExprM(APostMultExprM node){
         print_spaces();
@@ -366,6 +450,7 @@ public class PrintingVisitor extends DepthFirstAdapter{
         System.out.println("Expr_m type:mod end");
     }
 
+    //Expr_ipm
     @Override
     public void inAInplusExprIpm(AInplusExprIpm node){
         print_spaces();
@@ -394,6 +479,7 @@ public class PrintingVisitor extends DepthFirstAdapter{
         System.out.println("Expr_ipm type:infix-minus end");
     }
 
+    //Expr_bottom
     @Override
     public void inAConstExprBottom(AConstExprBottom node){
         print_spaces();
@@ -472,4 +558,144 @@ public class PrintingVisitor extends DepthFirstAdapter{
         System.out.println("Expr_bottom type:parethesis end");
     }
 
+    //cond
+    @Override
+    public void inACondOrCond(ACondOrCond node){
+        print_spaces();
+        System.out.println("Cond type:or start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outACondOrCond(ACondOrCond node){
+        spaces-=1;
+        print_spaces();
+        System.out.println("Cond type:or end");
+    }
+
+    @Override
+    public void inACondandAndCondand(ACondandAndCondand node){
+        print_spaces();
+        System.out.println("Condand type:and start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outACondandAndCondand(ACondandAndCondand node){
+        spaces-=1;
+        print_spaces();
+        System.out.println("Condand type:and end");
+    }
+
+    @Override
+    public void inACondnotNotCondnot(ACondnotNotCondnot node){
+        print_spaces();
+        System.out.println("Condnot type:not start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outACondnotNotCondnot(ACondnotNotCondnot node){
+        spaces-=1;
+        print_spaces();
+        System.out.println("Condnot type:not end");
+    }
+
+    @Override
+    public void inACondEqualCondBottom(ACondEqualCondBottom node) {
+        print_spaces();
+        System.out.println("Condbottom type:equal start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outACondEqualCondBottom(ACondEqualCondBottom node) {
+        spaces-=1;
+        print_spaces();
+        System.out.println("Condbottom type:equal end");
+    }
+
+    @Override
+    public void inACondHashCondBottom(ACondHashCondBottom node) {
+        print_spaces();
+        System.out.println("Condbottom type:hash start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outACondHashCondBottom(ACondHashCondBottom node) {
+        spaces-=1;
+        print_spaces();
+        System.out.println("Condbottom type:hash end");
+    }
+
+    @Override
+    public void inACondBiggerCondBottom(ACondBiggerCondBottom node) {
+        print_spaces();
+        System.out.println("Condbottom type:bigger start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outACondBiggerCondBottom(ACondBiggerCondBottom node) {
+        spaces-=1;
+        print_spaces();
+        System.out.println("Condbottom type:bigger end");
+    }
+
+    @Override
+    public void inACondLessCondBottom(ACondLessCondBottom node) {
+        print_spaces();
+        System.out.println("Condbottom type:less start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outACondLessCondBottom(ACondLessCondBottom node) {
+        spaces-=1;
+        print_spaces();
+        System.out.println("Condbottom type:less end");
+    }
+
+    @Override
+    public void inACondLeqCondBottom(ACondLeqCondBottom node) {
+        print_spaces();
+        System.out.println("Condbottom type:leq start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outACondLeqCondBottom(ACondLeqCondBottom node) {
+        spaces-=1;
+        print_spaces();
+        System.out.println("Condbottom type:leq end");
+    }
+
+    @Override
+    public void inACondBeqCondBottom(ACondBeqCondBottom node) {
+        print_spaces();
+        System.out.println("Condbottom type:beq start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outACondBeqCondBottom(ACondBeqCondBottom node) {
+        spaces-=1;
+        print_spaces();
+        System.out.println("Condbottom type:beq end");
+    }
+
+    @Override
+    public void inACondParCondBottom(ACondParCondBottom node) {
+        print_spaces();
+        System.out.println("Condbottom type:parenthesis start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outACondParCondBottom(ACondParCondBottom node) {
+        spaces-=1;
+        print_spaces();
+        System.out.println("Condbottom type:parenthesis end");
+    }
 }
