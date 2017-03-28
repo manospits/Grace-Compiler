@@ -296,4 +296,180 @@ public class PrintingVisitor extends DepthFirstAdapter{
         System.out.println("If trail end (with else)");
     }
 
+    @Override
+    public void inAPlusExpr(APlusExpr node){
+        print_spaces();
+        System.out.println("Expr type:plus start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outAPlusExpr(APlusExpr node){
+        spaces-=1;
+        print_spaces();
+        System.out.println("Expr type:plus end");
+    }
+
+    @Override
+    public void inAMinusExpr(AMinusExpr node){
+        print_spaces();
+        System.out.println("Expr type:minus start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outAMinusExpr(AMinusExpr node){
+        spaces-=1;
+        print_spaces();
+        System.out.println("Expr type:minus end");
+    }
+
+    @Override
+    public void inAPostMultExprM(APostMultExprM node){
+        print_spaces();
+        System.out.println("Expr_m type:mult start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outAPostMultExprM(APostMultExprM node){
+        spaces-=1;
+        print_spaces();
+        System.out.println("Expr_m type:mult end");
+    }
+
+    @Override
+    public void inAPostDivExprM(APostDivExprM node){
+        print_spaces();
+        System.out.println("Expr_m type:div start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outAPostDivExprM(APostDivExprM node){
+        spaces-=1;
+        print_spaces();
+        System.out.println("Expr_m type:div end");
+    }
+
+    @Override
+    public void inAPostModExprM(APostModExprM node){
+        print_spaces();
+        System.out.println("Expr_m type:mod start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outAPostModExprM(APostModExprM node){
+        spaces-=1;
+        print_spaces();
+        System.out.println("Expr_m type:mod end");
+    }
+
+    @Override
+    public void inAInplusExprIpm(AInplusExprIpm node){
+        print_spaces();
+        System.out.println("Expr_ipm type:infix-plus start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outAInminusExprIpm(AInminusExprIpm node){
+        spaces-=1;
+        print_spaces();
+        System.out.println("Expr_ipm type:infix-minus end");
+    }
+
+    @Override
+    public void inAInminusExprIpm(AInminusExprIpm node){
+        print_spaces();
+        System.out.println("Expr_ipm type:infix-minus start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outAInplusExprIpm(AInplusExprIpm node){
+        spaces-=1;
+        print_spaces();
+        System.out.println("Expr_ipm type:infix-minus end");
+    }
+
+    @Override
+    public void inAConstExprBottom(AConstExprBottom node){
+        print_spaces();
+        System.out.println("Expr_bottom type:int-const start");
+        spaces+=1;
+        print_spaces();
+        System.out.printf("<int-const> : %s\n",node.getTNumber().toString() );
+    }
+
+    @Override
+    public void outAConstExprBottom(AConstExprBottom node){
+        spaces-=1;
+        print_spaces();
+        System.out.println("Expr_bottom type:int-const end");
+    }
+
+    @Override
+    public void inACharExprBottom(ACharExprBottom node){
+        print_spaces();
+        System.out.println("Expr_botom type:char-const start");
+        spaces+=1;
+        print_spaces();
+        System.out.printf("<char-const> : %s\n",node.getTCharCon().toString());
+    }
+
+    @Override
+    public void outACharExprBottom(ACharExprBottom node){
+        spaces-=1;
+        print_spaces();
+        System.out.println("Expr_bottom type:char-const end");
+    }
+
+    @Override
+    public void inAFuncCallTypeExprBottom(AFuncCallTypeExprBottom node){
+        print_spaces();
+        System.out.println("Expr_botom type:func-call start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outAFuncCallTypeExprBottom(AFuncCallTypeExprBottom node){
+        spaces-=1;
+        print_spaces();
+        System.out.println("Expr_bottom type:func-call end");
+    }
+
+    @Override
+    public void inALValueTypeExprBottom(ALValueTypeExprBottom node)
+    {
+        print_spaces();
+        System.out.println("Expr_botom type:l-value start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outALValueTypeExprBottom(ALValueTypeExprBottom node)
+    {
+        spaces-=1;
+        print_spaces();
+        System.out.println("Expr_bottom type:l-value end");
+    }
+
+    @Override
+    public void inAParenthesisExprBottom(AParenthesisExprBottom node)
+    {
+        print_spaces();
+        System.out.println("Expr_botom type:parenthesis start");
+        spaces+=1;
+    }
+
+    @Override
+    public void outAParenthesisExprBottom(AParenthesisExprBottom node)
+    {
+        spaces-=1;
+        print_spaces();
+        System.out.println("Expr_bottom type:parethesis end");
+    }
+
 }

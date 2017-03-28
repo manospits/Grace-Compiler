@@ -185,7 +185,7 @@ Productions
             {plus}  expr t_s_plus  expr_m|
             {minus} expr t_s_minus expr_m|
             {multdivmod} expr_m;
-
+    
     expr_m =
             {post_mult} expr_m t_s_star expr_ipm|
             {post_div}  expr_m t_div    expr_ipm|
@@ -202,7 +202,7 @@ Productions
             {char} t_char_con          |
             {func_call_type} func_call |
             {l_value_type} l_value     |
-            {parebthesis} t_l_par expr t_r_par ;
+            {parenthesis} t_l_par expr t_r_par ;
 
     //cond = "(" <cond> ")" | "not" <cond> | <cond> ("and" | "or" ) <cond>
     //     | <expr> ("=" | "#" | "<" | ">" "<=" | ">=") <expr>
