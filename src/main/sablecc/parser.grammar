@@ -55,8 +55,7 @@ Tokens
   t_id       = letter (letter | uscore | number)*;
   t_number   = (number)+;
   t_char_con = quote common_char quote | quote escapeseq quote;
-  t_string  = dquote (common_char
-                       | escapeseq )* dquote;
+  t_string  = dquote (common_char | escapeseq )* dquote;
   t_s_plus   = '+';
   t_s_minus  = '-';
   t_s_star   = '*';

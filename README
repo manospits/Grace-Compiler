@@ -14,3 +14,10 @@
 
    mvn clean
 
+## Run with
+   java -jar target/compiler-1.0-SNAPSHOT.jar
+
+## Test example grace program ( lexical,syntactic analysis + CST printing )
+   cat examples/program2test.grace | java -jar target/compiler-1.0-SNAPSHOT.jar
+
+

@@ -8,7 +8,7 @@ import java.util.*;
 public class PrintingVisitor extends DepthFirstAdapter{
     int spaces=0;
 
-    public void print_spaces(){
+    private void print_spaces(){
         for(int i=0;i<spaces;i++){
             System.out.printf("  ");
         }
@@ -48,15 +48,20 @@ public class PrintingVisitor extends DepthFirstAdapter{
     @Override
     public void inAHeader(AHeader node){
         print_spaces();
-        System.out.printf("Header start : <id> = %s <ret-type> = %s \n", node.getTId().toString(),node.getRetType().toString());
+        System.out.println("Header start");
         spaces+=1;
+        print_spaces();
+        System.out.printf("<id> = %s\n", node.getTId().toString());
+        print_spaces();
+        System.out.printf("<ret-type> = %s \n",node.getRetType().toString());
     }
 
     @Override
     public void outAHeader(AHeader node){
         spaces-=1;
         print_spaces();
-        System.out.printf("Header end : <id> = %s\n", node.getTId().toString());
+        //System.out.printf("Header end : <id> = %s\n", node.getTId().toString());
+        System.out.println("Header end");
     }
 
     //fpar-def
@@ -83,8 +88,6 @@ public class PrintingVisitor extends DepthFirstAdapter{
             System.out.printf("%s",e.toString());
         }
         System.out.println("");
-        print_spaces();
-        System.out.printf("<fpar-type> : %s \n",node.getFparType().toString());
     }
 
     @Override
@@ -94,6 +97,34 @@ public class PrintingVisitor extends DepthFirstAdapter{
         System.out.println("Fpar-def end");
     }
 
+    @Override
+    public void inAFparType(AFparType node) {
+        print_spaces();
+        System.out.println("Fpar-type start");
+        spaces+=1;
+        print_spaces();
+        System.out.printf("<data-type> : %s \n",node.getDataType().toString());
+        List<PFparTypeTAr> copy = new ArrayList<PFparTypeTAr>(node.getFparTypeTAr());
+        if(node.getFparTypeTArEmpty() != null || !copy.isEmpty()){
+            print_spaces();
+            System.out.printf("Array indexes :");
+            if(node.getFparTypeTArEmpty() != null){
+                System.out.printf("%s",node.getFparTypeTArEmpty().toString());
+            }
+            for(PFparTypeTAr e : copy){
+                System.out.printf("%s",e.toString());
+            }
+            System.out.println("");
+        }
+    }
+
+    @Override
+    public void outAFparType(AFparType node)
+    {
+        spaces-=1;
+        print_spaces();
+        System.out.println("Fpar-type end");
+    }
     //local-def
     @Override
     public void inAFuncDefLocalDef(AFuncDefLocalDef node)
