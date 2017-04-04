@@ -1,0 +1,590 @@
+Program start
+  Func-def start
+    Header start
+      <id> = main 
+      <ret-type> = nothing  
+    Header end
+    Local-def start
+      Func-def start
+        Header start
+          <id> = bsort 
+          <ret-type> = nothing  
+          Fpar-def start
+            <ref> : No
+            <ids> : n 
+            Fpar-type start
+              <data-type> : int  
+            Fpar-type end
+          Fpar-def end
+          Fpar-def start
+            <ref> : Yes
+            <ids> : x 
+            Fpar-type start
+              <data-type> : int  
+              Array indexes :[ ] 
+            Fpar-type end
+          Fpar-def end
+        Header end
+        Local-def start
+          Func-def start
+            Header start
+              <id> = swap 
+              <ret-type> = nothing  
+              Fpar-def start
+                <ref> : Yes
+                <ids> : x , y 
+                Fpar-type start
+                  <data-type> : int  
+                Fpar-type end
+              Fpar-def end
+            Header end
+            Var-def start
+              <ids>  : t 
+              <type> : int  
+            Var-def end
+            Block start
+              stmt type:assignment start
+                <l-value> : t 
+                l-value type:id start
+                  <id> : t 
+                l-value type:id end
+                Expr_botom type:l-value start
+                  l-value type:id start
+                    <id> : x 
+                  l-value type:id end
+                Expr_bottom type:l-value end
+              stmt type:assignment end
+              stmt type:assignment start
+                <l-value> : x 
+                l-value type:id start
+                  <id> : x 
+                l-value type:id end
+                Expr_botom type:l-value start
+                  l-value type:id start
+                    <id> : y 
+                  l-value type:id end
+                Expr_bottom type:l-value end
+              stmt type:assignment end
+              stmt type:assignment start
+                <l-value> : y 
+                l-value type:id start
+                  <id> : y 
+                l-value type:id end
+                Expr_botom type:l-value start
+                  l-value type:id start
+                    <id> : t 
+                  l-value type:id end
+                Expr_bottom type:l-value end
+              stmt type:assignment end
+            Block end
+          Func-def end
+        Local-def end
+        Var-def start
+          <ids>  : changed , i 
+          <type> : int  
+        Var-def end
+        Block start
+          stmt type:assignment start
+            <l-value> : changed 
+            l-value type:id start
+              <id> : changed 
+            l-value type:id end
+            Expr_bottom type:int-const start
+              <int-const> : 1 
+            Expr_bottom type:int-const end
+          stmt type:assignment end
+          stmt type:while start
+            While start
+              Condbottom type:bigger start
+                Expr_botom type:l-value start
+                  l-value type:id start
+                    <id> : changed 
+                  l-value type:id end
+                Expr_bottom type:l-value end
+                Expr_bottom type:int-const start
+                  <int-const> : 0 
+                Expr_bottom type:int-const end
+              Condbottom type:bigger end
+              stmt type:block start
+                Block start
+                  stmt type:assignment start
+                    <l-value> : changed 
+                    l-value type:id start
+                      <id> : changed 
+                    l-value type:id end
+                    Expr_bottom type:int-const start
+                      <int-const> : 0 
+                    Expr_bottom type:int-const end
+                  stmt type:assignment end
+                  stmt type:assignment start
+                    <l-value> : i 
+                    l-value type:id start
+                      <id> : i 
+                    l-value type:id end
+                    Expr_bottom type:int-const start
+                      <int-const> : 0 
+                    Expr_bottom type:int-const end
+                  stmt type:assignment end
+                  stmt type:while start
+                    While start
+                      Condbottom type:less start
+                        Expr_botom type:l-value start
+                          l-value type:id start
+                            <id> : i 
+                          l-value type:id end
+                        Expr_bottom type:l-value end
+                        Expr type:minus start
+                          Expr_botom type:l-value start
+                            l-value type:id start
+                              <id> : n 
+                            l-value type:id end
+                          Expr_bottom type:l-value end
+                          Expr_bottom type:int-const start
+                            <int-const> : 1 
+                          Expr_bottom type:int-const end
+                        Expr type:minus end
+                      Condbottom type:less end
+                      stmt type:block start
+                        Block start
+                          stmt type:if start
+                            If starting
+                              If header start
+                                Condbottom type:bigger start
+                                  Expr_botom type:l-value start
+                                    l-value type:l-value [] start
+                                      l-value type:id start
+                                        <id> : x 
+                                      l-value type:id end
+                                      Expr_botom type:l-value start
+                                        l-value type:id start
+                                          <id> : i 
+                                        l-value type:id end
+                                      Expr_bottom type:l-value end
+                                    l-value type:l-value [] end
+                                  Expr_bottom type:l-value end
+                                  Expr_botom type:l-value start
+                                    l-value type:l-value [] start
+                                      l-value type:id start
+                                        <id> : x 
+                                      l-value type:id end
+                                      Expr type:plus start
+                                        Expr_botom type:l-value start
+                                          l-value type:id start
+                                            <id> : i 
+                                          l-value type:id end
+                                        Expr_bottom type:l-value end
+                                        Expr_bottom type:int-const start
+                                          <int-const> : 1 
+                                        Expr_bottom type:int-const end
+                                      Expr type:plus end
+                                    l-value type:l-value [] end
+                                  Expr_bottom type:l-value end
+                                Condbottom type:bigger end
+                              If header end
+                              If trail start (without else)
+                                stmt type:block start
+                                  Block start
+                                    stmt type:func-call start
+                                      Func-call start
+                                        Function <id> : swap 
+                                        Parameters :
+                                          Expr_botom type:l-value start
+                                            l-value type:l-value [] start
+                                              l-value type:id start
+                                                <id> : x 
+                                              l-value type:id end
+                                              Expr_botom type:l-value start
+                                                l-value type:id start
+                                                  <id> : i 
+                                                l-value type:id end
+                                              Expr_bottom type:l-value end
+                                            l-value type:l-value [] end
+                                          Expr_bottom type:l-value end
+                                          Expr_botom type:l-value start
+                                            l-value type:l-value [] start
+                                              l-value type:id start
+                                                <id> : x 
+                                              l-value type:id end
+                                              Expr type:plus start
+                                                Expr_botom type:l-value start
+                                                  l-value type:id start
+                                                    <id> : i 
+                                                  l-value type:id end
+                                                Expr_bottom type:l-value end
+                                                Expr_bottom type:int-const start
+                                                  <int-const> : 1 
+                                                Expr_bottom type:int-const end
+                                              Expr type:plus end
+                                            l-value type:l-value [] end
+                                          Expr_bottom type:l-value end
+                                        Parameters end
+                                      Func-call end
+                                    stmt type:func-call end
+                                    stmt type:assignment start
+                                      <l-value> : changed 
+                                      l-value type:id start
+                                        <id> : changed 
+                                      l-value type:id end
+                                      Expr_bottom type:int-const start
+                                        <int-const> : 1 
+                                      Expr_bottom type:int-const end
+                                    stmt type:assignment end
+                                  Block end
+                                stmt type:block end
+                              If trail end (without else)
+                            If end
+                          stmt type:if end
+                          stmt type:assignment start
+                            <l-value> : i 
+                            l-value type:id start
+                              <id> : i 
+                            l-value type:id end
+                            Expr type:plus start
+                              Expr_botom type:l-value start
+                                l-value type:id start
+                                  <id> : i 
+                                l-value type:id end
+                              Expr_bottom type:l-value end
+                              Expr_bottom type:int-const start
+                                <int-const> : 1 
+                              Expr_bottom type:int-const end
+                            Expr type:plus end
+                          stmt type:assignment end
+                        Block end
+                      stmt type:block end
+                    While end
+                  stmt type:while end
+                Block end
+              stmt type:block end
+            While end
+          stmt type:while end
+        Block end
+      Func-def end
+    Local-def end
+    Local-def start
+      Func-def start
+        Header start
+          <id> = putArray 
+          <ret-type> = nothing  
+          Fpar-def start
+            <ref> : Yes
+            <ids> : msg 
+            Fpar-type start
+              <data-type> : char  
+              Array indexes :[ ] 
+            Fpar-type end
+          Fpar-def end
+          Fpar-def start
+            <ref> : No
+            <ids> : n 
+            Fpar-type start
+              <data-type> : int  
+            Fpar-type end
+          Fpar-def end
+          Fpar-def start
+            <ref> : Yes
+            <ids> : x 
+            Fpar-type start
+              <data-type> : int  
+              Array indexes :[ ] 
+            Fpar-type end
+          Fpar-def end
+        Header end
+        Var-def start
+          <ids>  : i 
+          <type> : int  
+        Var-def end
+        Block start
+          stmt type:func-call start
+            Func-call start
+              Function <id> : puts 
+              Parameters :
+                Expr_botom type:l-value start
+                  l-value type:id start
+                    <id> : msg 
+                  l-value type:id end
+                Expr_bottom type:l-value end
+              Parameters end
+            Func-call end
+          stmt type:func-call end
+          stmt type:assignment start
+            <l-value> : i 
+            l-value type:id start
+              <id> : i 
+            l-value type:id end
+            Expr_bottom type:int-const start
+              <int-const> : 0 
+            Expr_bottom type:int-const end
+          stmt type:assignment end
+          stmt type:while start
+            While start
+              Condbottom type:less start
+                Expr_botom type:l-value start
+                  l-value type:id start
+                    <id> : i 
+                  l-value type:id end
+                Expr_bottom type:l-value end
+                Expr_botom type:l-value start
+                  l-value type:id start
+                    <id> : n 
+                  l-value type:id end
+                Expr_bottom type:l-value end
+              Condbottom type:less end
+              stmt type:block start
+                Block start
+                  stmt type:if start
+                    If starting
+                      If header start
+                        Condbottom type:bigger start
+                          Expr_botom type:l-value start
+                            l-value type:id start
+                              <id> : i 
+                            l-value type:id end
+                          Expr_bottom type:l-value end
+                          Expr_bottom type:int-const start
+                            <int-const> : 0 
+                          Expr_bottom type:int-const end
+                        Condbottom type:bigger end
+                      If header end
+                      If trail start (without else)
+                        stmt type:func-call start
+                          Func-call start
+                            Function <id> : writeString 
+                            Parameters :
+                              Expr_botom type:l-value start
+                                l-value type:string start
+                                  <string> : ", " 
+                                l-value type:string end
+                              Expr_bottom type:l-value end
+                            Parameters end
+                          Func-call end
+                        stmt type:func-call end
+                      If trail end (without else)
+                    If end
+                  stmt type:if end
+                  stmt type:func-call start
+                    Func-call start
+                      Function <id> : puti 
+                      Parameters :
+                        Expr_botom type:l-value start
+                          l-value type:l-value [] start
+                            l-value type:id start
+                              <id> : x 
+                            l-value type:id end
+                            Expr_botom type:l-value start
+                              l-value type:id start
+                                <id> : i 
+                              l-value type:id end
+                            Expr_bottom type:l-value end
+                          l-value type:l-value [] end
+                        Expr_bottom type:l-value end
+                      Parameters end
+                    Func-call end
+                  stmt type:func-call end
+                  stmt type:assignment start
+                    <l-value> : i 
+                    l-value type:id start
+                      <id> : i 
+                    l-value type:id end
+                    Expr type:plus start
+                      Expr_botom type:l-value start
+                        l-value type:id start
+                          <id> : i 
+                        l-value type:id end
+                      Expr_bottom type:l-value end
+                      Expr_bottom type:int-const start
+                        <int-const> : 1 
+                      Expr_bottom type:int-const end
+                    Expr type:plus end
+                  stmt type:assignment end
+                Block end
+              stmt type:block end
+            While end
+          stmt type:while end
+          stmt type:func-call start
+            Func-call start
+              Function <id> : puts 
+              Parameters :
+                Expr_botom type:l-value start
+                  l-value type:string start
+                    <string> : "\n" 
+                  l-value type:string end
+                Expr_bottom type:l-value end
+              Parameters end
+            Func-call end
+          stmt type:func-call end
+        Block end
+      Func-def end
+    Local-def end
+    Var-def start
+      <ids>  : seed , i 
+      <type> : int  
+    Var-def end
+    Var-def start
+      <ids>  : x 
+      <type> : int [ 16 ]  
+    Var-def end
+    Block start
+      stmt type:assignment start
+        <l-value> : seed 
+        l-value type:id start
+          <id> : seed 
+        l-value type:id end
+        Expr_bottom type:int-const start
+          <int-const> : 65 
+        Expr_bottom type:int-const end
+      stmt type:assignment end
+      stmt type:assignment start
+        <l-value> : i 
+        l-value type:id start
+          <id> : i 
+        l-value type:id end
+        Expr_bottom type:int-const start
+          <int-const> : 0 
+        Expr_bottom type:int-const end
+      stmt type:assignment end
+      stmt type:while start
+        While start
+          Condbottom type:less start
+            Expr_botom type:l-value start
+              l-value type:id start
+                <id> : i 
+              l-value type:id end
+            Expr_bottom type:l-value end
+            Expr_bottom type:int-const start
+              <int-const> : 16 
+            Expr_bottom type:int-const end
+          Condbottom type:less end
+          stmt type:block start
+            Block start
+              stmt type:assignment start
+                <l-value> : seed 
+                l-value type:id start
+                  <id> : seed 
+                l-value type:id end
+                Expr_m type:mod start
+                  Expr_botom type:parenthesis start
+                    Expr type:plus start
+                      Expr type:plus start
+                        Expr_m type:mult start
+                          Expr_botom type:l-value start
+                            l-value type:id start
+                              <id> : seed 
+                            l-value type:id end
+                          Expr_bottom type:l-value end
+                          Expr_bottom type:int-const start
+                            <int-const> : 137 
+                          Expr_bottom type:int-const end
+                        Expr_m type:mult end
+                        Expr_bottom type:int-const start
+                          <int-const> : 220 
+                        Expr_bottom type:int-const end
+                      Expr type:plus end
+                      Expr_botom type:l-value start
+                        l-value type:id start
+                          <id> : i 
+                        l-value type:id end
+                      Expr_bottom type:l-value end
+                    Expr type:plus end
+                  Expr_bottom type:parethesis end
+                  Expr_bottom type:int-const start
+                    <int-const> : 101 
+                  Expr_bottom type:int-const end
+                Expr_m type:mod end
+              stmt type:assignment end
+              stmt type:assignment start
+                <l-value> : x [ i ] 
+                l-value type:l-value [] start
+                  l-value type:id start
+                    <id> : x 
+                  l-value type:id end
+                  Expr_botom type:l-value start
+                    l-value type:id start
+                      <id> : i 
+                    l-value type:id end
+                  Expr_bottom type:l-value end
+                l-value type:l-value [] end
+                Expr_botom type:l-value start
+                  l-value type:id start
+                    <id> : seed 
+                  l-value type:id end
+                Expr_bottom type:l-value end
+              stmt type:assignment end
+              stmt type:assignment start
+                <l-value> : i 
+                l-value type:id start
+                  <id> : i 
+                l-value type:id end
+                Expr type:plus start
+                  Expr_botom type:l-value start
+                    l-value type:id start
+                      <id> : i 
+                    l-value type:id end
+                  Expr_bottom type:l-value end
+                  Expr_bottom type:int-const start
+                    <int-const> : 1 
+                  Expr_bottom type:int-const end
+                Expr type:plus end
+              stmt type:assignment end
+            Block end
+          stmt type:block end
+        While end
+      stmt type:while end
+      stmt type:func-call start
+        Func-call start
+          Function <id> : putArray 
+          Parameters :
+            Expr_botom type:l-value start
+              l-value type:string start
+                <string> : "Initial array: " 
+              l-value type:string end
+            Expr_bottom type:l-value end
+            Expr_bottom type:int-const start
+              <int-const> : 16 
+            Expr_bottom type:int-const end
+            Expr_botom type:l-value start
+              l-value type:id start
+                <id> : x 
+              l-value type:id end
+            Expr_bottom type:l-value end
+          Parameters end
+        Func-call end
+      stmt type:func-call end
+      stmt type:func-call start
+        Func-call start
+          Function <id> : bsort 
+          Parameters :
+            Expr_bottom type:int-const start
+              <int-const> : 16 
+            Expr_bottom type:int-const end
+            Expr_botom type:l-value start
+              l-value type:id start
+                <id> : x 
+              l-value type:id end
+            Expr_bottom type:l-value end
+          Parameters end
+        Func-call end
+      stmt type:func-call end
+      stmt type:func-call start
+        Func-call start
+          Function <id> : putArray 
+          Parameters :
+            Expr_botom type:l-value start
+              l-value type:string start
+                <string> : "Sorted array: " 
+              l-value type:string end
+            Expr_bottom type:l-value end
+            Expr_bottom type:int-const start
+              <int-const> : 16 
+            Expr_bottom type:int-const end
+            Expr_botom type:l-value start
+              l-value type:id start
+                <id> : x 
+              l-value type:id end
+            Expr_bottom type:l-value end
+          Parameters end
+        Func-call end
+      stmt type:func-call end
+    Block end
+  Func-def end
+Program end

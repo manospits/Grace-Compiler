@@ -1,0 +1,647 @@
+Program start
+  Func-def start
+    Header start
+      <id> = main 
+      <ret-type> = nothing  
+    Header end
+    Local-def start
+      Func-def start
+        Header start
+          <id> = prime 
+          <ret-type> = int  
+          Fpar-def start
+            <ref> : No
+            <ids> : n 
+            Fpar-type start
+              <data-type> : int  
+            Fpar-type end
+          Fpar-def end
+        Header end
+        Var-def start
+          <ids>  : i 
+          <type> : int  
+        Var-def end
+        Block start
+          stmt type:if start
+            If starting
+              If header start
+                Condbottom type:less start
+                  Expr_botom type:l-value start
+                    l-value type:id start
+                      <id> : n 
+                    l-value type:id end
+                  Expr_bottom type:l-value end
+                  Expr_bottom type:int-const start
+                    <int-const> : 0 
+                  Expr_bottom type:int-const end
+                Condbottom type:less end
+              If header end
+              If trail start (with else)
+                stmt (else) type:return expr? semi start
+                  Expr_botom type:func-call start
+                    Func-call start
+                      Function <id> : prime 
+                      Parameters :
+                        Expr_ipm type:infix-minus start
+                          Expr_bottom type:int-const start
+                            <int-const> : 1 
+                          Expr_bottom type:int-const end
+                        Expr_ipm type:infix-minus end
+                      Parameters end
+                    Func-call end
+                  Expr_bottom type:func-call end
+                stmt (else) type:return expr? semi end
+                stmt type:if start
+                  If starting
+                    If header start
+                      Condbottom type:less start
+                        Expr_botom type:l-value start
+                          l-value type:id start
+                            <id> : n 
+                          l-value type:id end
+                        Expr_bottom type:l-value end
+                        Expr_bottom type:int-const start
+                          <int-const> : 2 
+                        Expr_bottom type:int-const end
+                      Condbottom type:less end
+                    If header end
+                    If trail start (with else)
+                      stmt (else) type:return expr? semi start
+                        Expr_bottom type:int-const start
+                          <int-const> : 0 
+                        Expr_bottom type:int-const end
+                      stmt (else) type:return expr? semi end
+                      stmt type:if start
+                        If starting
+                          If header start
+                            Condbottom type:equal start
+                              Expr_botom type:l-value start
+                                l-value type:id start
+                                  <id> : n 
+                                l-value type:id end
+                              Expr_bottom type:l-value end
+                              Expr_bottom type:int-const start
+                                <int-const> : 2 
+                              Expr_bottom type:int-const end
+                            Condbottom type:equal end
+                          If header end
+                          If trail start (with else)
+                            stmt (else) type:return expr? semi start
+                              Expr_bottom type:int-const start
+                                <int-const> : 1 
+                              Expr_bottom type:int-const end
+                            stmt (else) type:return expr? semi end
+                            stmt type:if start
+                              If starting
+                                If header start
+                                  Condbottom type:equal start
+                                    Expr_m type:mod start
+                                      Expr_botom type:l-value start
+                                        l-value type:id start
+                                          <id> : n 
+                                        l-value type:id end
+                                      Expr_bottom type:l-value end
+                                      Expr_bottom type:int-const start
+                                        <int-const> : 2 
+                                      Expr_bottom type:int-const end
+                                    Expr_m type:mod end
+                                    Expr_bottom type:int-const start
+                                      <int-const> : 0 
+                                    Expr_bottom type:int-const end
+                                  Condbottom type:equal end
+                                If header end
+                                If trail start (with else)
+                                  stmt (else) type:return expr? semi start
+                                    Expr_bottom type:int-const start
+                                      <int-const> : 0 
+                                    Expr_bottom type:int-const end
+                                  stmt (else) type:return expr? semi end
+                                  stmt type:block start
+                                    Block start
+                                      stmt type:assignment start
+                                        <l-value> : i 
+                                        l-value type:id start
+                                          <id> : i 
+                                        l-value type:id end
+                                        Expr_bottom type:int-const start
+                                          <int-const> : 3 
+                                        Expr_bottom type:int-const end
+                                      stmt type:assignment end
+                                      stmt type:while start
+                                        While start
+                                          Condbottom type:leq start
+                                            Expr_botom type:l-value start
+                                              l-value type:id start
+                                                <id> : i 
+                                              l-value type:id end
+                                            Expr_bottom type:l-value end
+                                            Expr_m type:div start
+                                              Expr_botom type:l-value start
+                                                l-value type:id start
+                                                  <id> : n 
+                                                l-value type:id end
+                                              Expr_bottom type:l-value end
+                                              Expr_bottom type:int-const start
+                                                <int-const> : 2 
+                                              Expr_bottom type:int-const end
+                                            Expr_m type:div end
+                                          Condbottom type:leq end
+                                          stmt type:block start
+                                            Block start
+                                              stmt type:if start
+                                                If starting
+                                                  If header start
+                                                    Condbottom type:equal start
+                                                      Expr_m type:mod start
+                                                        Expr_botom type:l-value start
+                                                          l-value type:id start
+                                                            <id> : n 
+                                                          l-value type:id end
+                                                        Expr_bottom type:l-value end
+                                                        Expr_botom type:l-value start
+                                                          l-value type:id start
+                                                            <id> : i 
+                                                          l-value type:id end
+                                                        Expr_bottom type:l-value end
+                                                      Expr_m type:mod end
+                                                      Expr_bottom type:int-const start
+                                                        <int-const> : 0 
+                                                      Expr_bottom type:int-const end
+                                                    Condbottom type:equal end
+                                                  If header end
+                                                  If trail start (without else)
+                                                    stmt type:return expr? semi start
+                                                      Expr_bottom type:int-const start
+                                                        <int-const> : 0 
+                                                      Expr_bottom type:int-const end
+                                                    stmt type:return expr? semi end
+                                                  If trail end (without else)
+                                                If end
+                                              stmt type:if end
+                                              stmt type:assignment start
+                                                <l-value> : i 
+                                                l-value type:id start
+                                                  <id> : i 
+                                                l-value type:id end
+                                                Expr type:plus start
+                                                  Expr_botom type:l-value start
+                                                    l-value type:id start
+                                                      <id> : i 
+                                                    l-value type:id end
+                                                  Expr_bottom type:l-value end
+                                                  Expr_bottom type:int-const start
+                                                    <int-const> : 2 
+                                                  Expr_bottom type:int-const end
+                                                Expr type:plus end
+                                              stmt type:assignment end
+                                            Block end
+                                          stmt type:block end
+                                        While end
+                                      stmt type:while end
+                                      stmt type:return expr? semi start
+                                        Expr_bottom type:int-const start
+                                          <int-const> : 1 
+                                        Expr_bottom type:int-const end
+                                      stmt type:return expr? semi end
+                                    Block end
+                                  stmt type:block end
+                                If trail end (with else)
+                              If end
+                            stmt type:if end
+                          If trail end (with else)
+                        If end
+                      stmt type:if end
+                    If trail end (with else)
+                  If end
+                stmt type:if end
+              If trail end (with else)
+            If end
+          stmt type:if end
+        Block end
+      Func-def end
+    Local-def end
+    Var-def start
+      <ids>  : limit , number , counter 
+      <type> : int  
+    Var-def end
+    Block start
+      stmt type:func-call start
+        Func-call start
+          Function <id> : puts 
+          Parameters :
+            Expr_botom type:l-value start
+              l-value type:string start
+                <string> : "Limit: " 
+              l-value type:string end
+            Expr_bottom type:l-value end
+          Parameters end
+        Func-call end
+      stmt type:func-call end
+      stmt type:assignment start
+        <l-value> : limit 
+        l-value type:id start
+          <id> : limit 
+        l-value type:id end
+        Expr_botom type:func-call start
+          Func-call start
+            Function <id> : geti 
+          Func-call end
+        Expr_bottom type:func-call end
+      stmt type:assignment end
+      stmt type:func-call start
+        Func-call start
+          Function <id> : puts 
+          Parameters :
+            Expr_botom type:l-value start
+              l-value type:string start
+                <string> : "Primes:\n" 
+              l-value type:string end
+            Expr_bottom type:l-value end
+          Parameters end
+        Func-call end
+      stmt type:func-call end
+      stmt type:assignment start
+        <l-value> : counter 
+        l-value type:id start
+          <id> : counter 
+        l-value type:id end
+        Expr_bottom type:int-const start
+          <int-const> : 0 
+        Expr_bottom type:int-const end
+      stmt type:assignment end
+      stmt type:if start
+        If starting
+          If header start
+            Condbottom type:beq start
+              Expr_botom type:l-value start
+                l-value type:id start
+                  <id> : limit 
+                l-value type:id end
+              Expr_bottom type:l-value end
+              Expr_bottom type:int-const start
+                <int-const> : 2 
+              Expr_bottom type:int-const end
+            Condbottom type:beq end
+          If header end
+          If trail start (without else)
+            stmt type:block start
+              Block start
+                stmt type:assignment start
+                  <l-value> : counter 
+                  l-value type:id start
+                    <id> : counter 
+                  l-value type:id end
+                  Expr type:plus start
+                    Expr_botom type:l-value start
+                      l-value type:id start
+                        <id> : counter 
+                      l-value type:id end
+                    Expr_bottom type:l-value end
+                    Expr_bottom type:int-const start
+                      <int-const> : 1 
+                    Expr_bottom type:int-const end
+                  Expr type:plus end
+                stmt type:assignment end
+                stmt type:func-call start
+                  Func-call start
+                    Function <id> : geti 
+                    Parameters :
+                      Expr_bottom type:int-const start
+                        <int-const> : 2 
+                      Expr_bottom type:int-const end
+                    Parameters end
+                  Func-call end
+                stmt type:func-call end
+                stmt type:func-call start
+                  Func-call start
+                    Function <id> : puts 
+                    Parameters :
+                      Expr_botom type:l-value start
+                        l-value type:string start
+                          <string> : "\n" 
+                        l-value type:string end
+                      Expr_bottom type:l-value end
+                    Parameters end
+                  Func-call end
+                stmt type:func-call end
+              Block end
+            stmt type:block end
+          If trail end (without else)
+        If end
+      stmt type:if end
+      stmt type:if start
+        If starting
+          If header start
+            Condbottom type:beq start
+              Expr_botom type:l-value start
+                l-value type:id start
+                  <id> : limit 
+                l-value type:id end
+              Expr_bottom type:l-value end
+              Expr_bottom type:int-const start
+                <int-const> : 3 
+              Expr_bottom type:int-const end
+            Condbottom type:beq end
+          If header end
+          If trail start (without else)
+            stmt type:block start
+              Block start
+                stmt type:assignment start
+                  <l-value> : counter 
+                  l-value type:id start
+                    <id> : counter 
+                  l-value type:id end
+                  Expr type:plus start
+                    Expr_botom type:l-value start
+                      l-value type:id start
+                        <id> : counter 
+                      l-value type:id end
+                    Expr_bottom type:l-value end
+                    Expr_bottom type:int-const start
+                      <int-const> : 1 
+                    Expr_bottom type:int-const end
+                  Expr type:plus end
+                stmt type:assignment end
+                stmt type:func-call start
+                  Func-call start
+                    Function <id> : geti 
+                    Parameters :
+                      Expr_bottom type:int-const start
+                        <int-const> : 3 
+                      Expr_bottom type:int-const end
+                    Parameters end
+                  Func-call end
+                stmt type:func-call end
+                stmt type:func-call start
+                  Func-call start
+                    Function <id> : puts 
+                    Parameters :
+                      Expr_botom type:l-value start
+                        l-value type:string start
+                          <string> : "\n" 
+                        l-value type:string end
+                      Expr_bottom type:l-value end
+                    Parameters end
+                  Func-call end
+                stmt type:func-call end
+              Block end
+            stmt type:block end
+          If trail end (without else)
+        If end
+      stmt type:if end
+      stmt type:assignment start
+        <l-value> : number 
+        l-value type:id start
+          <id> : number 
+        l-value type:id end
+        Expr_bottom type:int-const start
+          <int-const> : 6 
+        Expr_bottom type:int-const end
+      stmt type:assignment end
+      stmt type:while start
+        While start
+          Condbottom type:leq start
+            Expr_botom type:l-value start
+              l-value type:id start
+                <id> : number 
+              l-value type:id end
+            Expr_bottom type:l-value end
+            Expr_botom type:l-value start
+              l-value type:id start
+                <id> : limit 
+              l-value type:id end
+            Expr_bottom type:l-value end
+          Condbottom type:leq end
+          stmt type:block start
+            Block start
+              stmt type:if start
+                If starting
+                  If header start
+                    Condbottom type:equal start
+                      Expr_botom type:func-call start
+                        Func-call start
+                          Function <id> : prime 
+                          Parameters :
+                            Expr type:minus start
+                              Expr_botom type:l-value start
+                                l-value type:id start
+                                  <id> : number 
+                                l-value type:id end
+                              Expr_bottom type:l-value end
+                              Expr_bottom type:int-const start
+                                <int-const> : 1 
+                              Expr_bottom type:int-const end
+                            Expr type:minus end
+                          Parameters end
+                        Func-call end
+                      Expr_bottom type:func-call end
+                      Expr_bottom type:int-const start
+                        <int-const> : 1 
+                      Expr_bottom type:int-const end
+                    Condbottom type:equal end
+                  If header end
+                  If trail start (without else)
+                    stmt type:block start
+                      Block start
+                        stmt type:assignment start
+                          <l-value> : counter 
+                          l-value type:id start
+                            <id> : counter 
+                          l-value type:id end
+                          Expr type:plus start
+                            Expr_botom type:l-value start
+                              l-value type:id start
+                                <id> : counter 
+                              l-value type:id end
+                            Expr_bottom type:l-value end
+                            Expr_bottom type:int-const start
+                              <int-const> : 1 
+                            Expr_bottom type:int-const end
+                          Expr type:plus end
+                        stmt type:assignment end
+                        stmt type:func-call start
+                          Func-call start
+                            Function <id> : puti 
+                            Parameters :
+                              Expr type:minus start
+                                Expr_botom type:l-value start
+                                  l-value type:id start
+                                    <id> : number 
+                                  l-value type:id end
+                                Expr_bottom type:l-value end
+                                Expr_bottom type:int-const start
+                                  <int-const> : 1 
+                                Expr_bottom type:int-const end
+                              Expr type:minus end
+                            Parameters end
+                          Func-call end
+                        stmt type:func-call end
+                        stmt type:func-call start
+                          Func-call start
+                            Function <id> : puts 
+                            Parameters :
+                              Expr_botom type:l-value start
+                                l-value type:string start
+                                  <string> : "\n" 
+                                l-value type:string end
+                              Expr_bottom type:l-value end
+                            Parameters end
+                          Func-call end
+                        stmt type:func-call end
+                      Block end
+                    stmt type:block end
+                  If trail end (without else)
+                If end
+              stmt type:if end
+              stmt type:if start
+                If starting
+                  If header start
+                    Condand type:and start
+                      Condbottom type:hash start
+                        Expr_botom type:l-value start
+                          l-value type:id start
+                            <id> : number 
+                          l-value type:id end
+                        Expr_bottom type:l-value end
+                        Expr_botom type:l-value start
+                          l-value type:id start
+                            <id> : limit 
+                          l-value type:id end
+                        Expr_bottom type:l-value end
+                      Condbottom type:hash end
+                      Condbottom type:equal start
+                        Expr_botom type:func-call start
+                          Func-call start
+                            Function <id> : prime 
+                            Parameters :
+                              Expr type:plus start
+                                Expr_botom type:l-value start
+                                  l-value type:id start
+                                    <id> : number 
+                                  l-value type:id end
+                                Expr_bottom type:l-value end
+                                Expr_bottom type:int-const start
+                                  <int-const> : 1 
+                                Expr_bottom type:int-const end
+                              Expr type:plus end
+                            Parameters end
+                          Func-call end
+                        Expr_bottom type:func-call end
+                        Expr_bottom type:int-const start
+                          <int-const> : 1 
+                        Expr_bottom type:int-const end
+                      Condbottom type:equal end
+                    Condand type:and end
+                  If header end
+                  If trail start (without else)
+                    stmt type:block start
+                      Block start
+                        stmt type:assignment start
+                          <l-value> : counter 
+                          l-value type:id start
+                            <id> : counter 
+                          l-value type:id end
+                          Expr type:plus start
+                            Expr_botom type:l-value start
+                              l-value type:id start
+                                <id> : counter 
+                              l-value type:id end
+                            Expr_bottom type:l-value end
+                            Expr_bottom type:int-const start
+                              <int-const> : 1 
+                            Expr_bottom type:int-const end
+                          Expr type:plus end
+                        stmt type:assignment end
+                        stmt type:func-call start
+                          Func-call start
+                            Function <id> : puti 
+                            Parameters :
+                              Expr type:plus start
+                                Expr_botom type:l-value start
+                                  l-value type:id start
+                                    <id> : number 
+                                  l-value type:id end
+                                Expr_bottom type:l-value end
+                                Expr_bottom type:int-const start
+                                  <int-const> : 1 
+                                Expr_bottom type:int-const end
+                              Expr type:plus end
+                            Parameters end
+                          Func-call end
+                        stmt type:func-call end
+                        stmt type:func-call start
+                          Func-call start
+                            Function <id> : puts 
+                            Parameters :
+                              Expr_botom type:l-value start
+                                l-value type:string start
+                                  <string> : "\n" 
+                                l-value type:string end
+                              Expr_bottom type:l-value end
+                            Parameters end
+                          Func-call end
+                        stmt type:func-call end
+                      Block end
+                    stmt type:block end
+                  If trail end (without else)
+                If end
+              stmt type:if end
+              stmt type:assignment start
+                <l-value> : number 
+                l-value type:id start
+                  <id> : number 
+                l-value type:id end
+                Expr type:plus start
+                  Expr_botom type:l-value start
+                    l-value type:id start
+                      <id> : number 
+                    l-value type:id end
+                  Expr_bottom type:l-value end
+                  Expr_bottom type:int-const start
+                    <int-const> : 6 
+                  Expr_bottom type:int-const end
+                Expr type:plus end
+              stmt type:assignment end
+            Block end
+          stmt type:block end
+        While end
+      stmt type:while end
+      stmt type:func-call start
+        Func-call start
+          Function <id> : puts 
+          Parameters :
+            Expr_botom type:l-value start
+              l-value type:string start
+                <string> : "\nTotal: " 
+              l-value type:string end
+            Expr_bottom type:l-value end
+          Parameters end
+        Func-call end
+      stmt type:func-call end
+      stmt type:func-call start
+        Func-call start
+          Function <id> : puti 
+          Parameters :
+            Expr_botom type:l-value start
+              l-value type:id start
+                <id> : counter 
+              l-value type:id end
+            Expr_bottom type:l-value end
+          Parameters end
+        Func-call end
+      stmt type:func-call end
+      stmt type:func-call start
+        Func-call start
+          Function <id> : puts 
+          Parameters :
+            Expr_botom type:l-value start
+              l-value type:string start
+                <string> : "\n" 
+              l-value type:string end
+            Expr_bottom type:l-value end
+          Parameters end
+        Func-call end
+      stmt type:func-call end
+    Block end
+  Func-def end
+Program end

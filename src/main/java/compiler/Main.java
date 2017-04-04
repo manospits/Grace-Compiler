@@ -17,7 +17,7 @@ class Main{
             // Parse the input.
             try{
                 Start tree = p.parse();
-                System.out.println(tree.toString());
+                //System.out.println(tree.toString());
                 tree.apply(new PrintingVisitor());
               }
             catch(Exception e){

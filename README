@@ -1,4 +1,5 @@
-
+"Grace" Language Compiler Project for Compilers Course in DIT at UOA 2017
+  -part 1 : Lexer and parser using SableCC
 
 # Instructions
 
@@ -20,4 +21,6 @@
 ## Test example grace program ( lexical,syntactic analysis + CST printing )
    cat examples/program2test.grace | java -jar target/compiler-1.0-SNAPSHOT.jar
 
+## Print all CSTs in examples folder in testing/example_CSTs/
+   execute script in ./testing/print_CSTs.sh
 
