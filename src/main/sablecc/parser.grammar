@@ -62,7 +62,6 @@ Tokens
   t_s_slash  = '/';
   t_s_hash   = '#';
   t_s_equal  = '=';
-  t_s_rombos = '<>';
   t_s_leq    = '<=';
   t_s_beq    = '>=';
   t_s_less   = '<';
