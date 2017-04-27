@@ -85,50 +85,50 @@ Ignored Tokens
 Productions
 
     //<program> = <func-def>
-    program = func_def;
+    program{-> program} = func_def {-> New program(func_def)};
 
     //<func-def> = <header> (<local_def>)* <block>
-    func_def =  header local_def* block;
+    func_def {-> func_def} =  header local_def* block {-> New func_def(header,[local_def],[block.stmt])};
 
     //<header> = "fun" <id> "("<fpar-def> (";" <fpar-def>)() ")" : <ret-type>
-    header   = t_fun t_id t_l_par header_members? t_r_par t_uddot ret_type;
-    header_semi_fpardef = t_semi fpar_def;
-    header_members = fpar_def header_semi_fpardef*;
+    header {-> header}   = t_fun t_id t_l_par header_members? t_r_par t_uddot ret_type {-> New header(t_id,[header_members.fpar_def],ret_type)};
+    header_semi_fpardef {-> fpar_def} = t_semi fpar_def {-> fpar_def};
+    header_members {-> fpar_def*} = fpar_def header_semi_fpardef* {-> [fpar_def,header_semi_fpardef.fpar_def]};
 
     //<fpar-def> = ["ref"] <id> (","<id>)* ":" <fpar-type>
-    fpar_def = t_ref? t_id id_comma* t_uddot fpar_type;
-    id_comma = t_comma t_id;
+    fpar_def {-> fpar_def} = t_ref? t_id id_comma* t_uddot fpar_type {-> New fpar_def(t_ref,[t_id,id_comma.t_id],fpar_type)};
+    id_comma {-> t_id}= t_comma t_id {-> t_id};
 
     //<data-type> = "int" | "char"
-    data_type =
-            {int} t_int |
-            {char} t_char;
+    data_type {-> data_type}=
+            {int} t_int {-> New data_type.int(t_int)}|
+            {char} t_char {-> New data_type.char(t_char)};
 
     //<type> = <data-type> ("[" <int-const> "]")*
-    type = data_type array_dec*;
-    array_dec = t_l_ar t_number t_r_ar;
+    type{-> type} = data_type array_dec*{-> New type(data_type,[array_dec.t_number])};
+    array_dec{-> t_number} = t_l_ar t_number t_r_ar {-> t_number};
 
     //<ret-type> <data-type> | "nothing"
-    ret_type =
-            {ret_data_type} data_type |
-            {nothing} t_nothing;
+    ret_type {-> ret_type} =
+            {ret_data_type} data_type {-> New ret_type.ret_data_type(data_type)}|
+            {nothing} t_nothing {-> New ret_type.nothing(t_nothing)};
 
     //<fpar-type> = <data-type> ["[" "]"] ( "[" <int-const> "]")*
-    fpar_type = data_type fpar_type_t_ar_empty? fpar_type_t_ar* ;
-    fpar_type_t_ar_empty = t_l_ar t_r_ar;
-    fpar_type_t_ar = t_l_ar t_number t_r_ar;
+    fpar_type {-> fpar_type} = data_type fpar_type_t_ar_empty? fpar_type_t_ar* {-> New fpar_type(data_type,fpar_type_t_ar_empty,[fpar_type_t_ar.t_number])} ;
+    fpar_type_t_ar_empty {-> fpar_type_t_ar_empty} = t_l_ar t_r_ar {-> New fpar_type_t_ar_empty(t_l_ar,t_r_ar)};
+    fpar_type_t_ar {-> t_number} = t_l_ar t_number t_r_ar {-> t_number};
 
     //<local-def> = <func-def> | <func-decl> | <var-def>
-    local_def =
-        {func_def}   func_def  |
-        {func_decl}  func_decl |
-        {var_def}    var_def;
+    local_def {-> local_def}  =
+        {func_def}   func_def  {-> New local_def.func_def(func_def)}   |
+        {func_decl}  func_decl {-> New local_def.func_decl(func_decl)} |
+        {var_def}    var_def {-> New local_def.var_def(var_def)};
 
     //<var-def> = "var" <id> (",",<id>)* ":" <type> ";"
-    var_def   = t_var t_id id_comma* t_uddot type t_semi;
+    var_def {-> var_def}   = t_var t_id id_comma* t_uddot type t_semi{-> New var_def([t_id,id_comma.t_id],type)};
 
     //<func-decl> = <header> ";"
-    func_decl = header t_semi;
+    func_decl{-> func_decl} = header t_semi{-> New func_decl(header)};
 
     //<stmt> = ";" | <l-value> "<-" <expr> ";" | <block> | <func_call> ";"
     //       | "if" <cond> "then" <stmt> [ "else" <stmt> ]
@@ -164,43 +164,43 @@ Productions
 
 
     //<block> = "{" (<stmt>)* "}"
-    block = t_l_br stmt* t_r_br;
+    block{-> stmt*} = t_l_br stmt* t_r_br {-> [stmt]};
 
     //<func-call> = <id> "(" [ <expr> ( "," <expr> ) *] ")"
-    func_call = t_id t_l_par func_call_optional? t_r_par;
-    func_call_optional = expr comma_expr*;
-    comma_expr= t_comma expr;
+    func_call{-> func_call} = t_id t_l_par func_call_optional? t_r_par {-> New func_call(t_id,[func_call_optional.expr])};
+    func_call_optional{-> expr*} = expr comma_expr* {-> [expr.expr, comma_expr.expr]};
+    comma_expr {-> expr} = t_comma expr {-> expr};
 
     //<l-value> = <id> | <string-literal> | <l-value> "[" <expr> "]"
-    l_value =
-        {l_value_id}       t_id     |
-        {l_value_string}   t_string |
-        {l_value_array}    l_value  t_l_ar expr t_r_ar;
+    l_value {-> l_value} =
+        {l_value_id}       t_id    {-> New l_value.l_value_id(t_id)} |
+        {l_value_string}   t_string {-> New l_value.l_value_string(t_string)} |
+        {l_value_array}    l_value  t_l_ar expr t_r_ar {-> New l_value.l_value_array(l_value,expr)};
 
     //<expr> = <int-const> | <char-const> | <l-value> | <func-call> | "(" <expr> ")"
     //       | ( "+" | "-" ) <expr> ("+" | "-" | "*" | "div" | "mod" ) <expr>
     expr =
-            {plus}  expr t_s_plus  expr_m|
-            {minus} expr t_s_minus expr_m|
-            {multdivmod} expr_m;
+            {plus}  expr t_s_plus  expr_m {-> New expr.plus(expr,expr_m.expr)}|
+            {minus} expr t_s_minus expr_m {-> New expr.minus(expr,expr_m.expr)}|
+            {multdivmod} expr_m {-> expr_m.expr};
 
-    expr_m =
-            {post_mult} expr_m t_s_star expr_ipm|
-            {post_div}  expr_m t_div    expr_ipm|
-            {post_mod}  expr_m t_mod    expr_ipm|
-            {infixplusminus}       expr_ipm;
+    expr_m {-> expr}=
+            {post_mult} expr_m t_s_star expr_ipm {-> New expr.post_mult(expr_m.expr,expr_ipm.expr)}|
+            {post_div}  expr_m t_div    expr_ipm {-> New expr.post_div(expr_m.expr,expr_ipm.expr)}|
+            {post_mod}  expr_m t_mod    expr_ipm {-> New expr.post_mod(expr_m.expr,expr_ipm.expr)}|
+            {infixplusminus}       expr_ipm {-> expr_ipm.expr};
 
-    expr_ipm =
-            {inplus}  t_s_plus  expr_bottom|
-            {inminus} t_s_minus expr_bottom|
-            {bottom} expr_bottom;
+    expr_ipm {-> expr}=
+            {inplus}  t_s_plus  expr_bottom {-> New expr.inplus(expr_bottom.expr)}|
+            {inminus} t_s_minus expr_bottom {-> New expr.inplus(expr_bottom.expr)}|
+            {bottom} expr_bottom {-> expr_bottom.expr};
 
-    expr_bottom =
-            {const} t_number           |
-            {char} t_char_con          |
-            {func_call_type} func_call |
-            {l_value_type} l_value     |
-            {parenthesis} t_l_par expr t_r_par ;
+    expr_bottom{-> expr} =
+            {const} t_number   {-> New expr.const(t_number)}                   |
+            {char} t_char_con  {-> New expr.char(t_char_con)}                  |
+            {func_call_type} func_call {-> New expr.func_call_type(func_call)} |
+            {l_value_type} l_value {-> New expr.l_value_type(l_value)}         |
+            {parenthesis} t_l_par expr t_r_par {-> New expr.parenthesis(expr)} ;
 
     //cond = "(" <cond> ")" | "not" <cond> | <cond> ("and" | "or" ) <cond>
     //     | <expr> ("=" | "#" | "<" | ">" "<=" | ">=") <expr>
@@ -226,5 +226,58 @@ Productions
         {cond_beq}    [left]:expr t_s_beq    [right]:expr |
         {cond_par}    [left]:t_l_par cond t_r_par;
 
+Abstract Syntax Tree
+
+ program = header local_def* stmt*;
+
+ func_def =  header local_def* stmt*;
+
+ header = t_id fpar_def* ret_type;
+
+ fpar_def = t_ref? t_id* fpar_type;
+
+ data_type =
+        {int} t_int |
+        {char} t_char;
+
+ type = data_type t_number*;
+
+ ret_type =
+    {ret_data_type} data_type |
+    {nothing} t_nothing;
+
+ fpar_type = data_type fpar_type_t_ar_empty? t_number* ;
+ fpar_type_t_ar_empty = t_l_ar t_r_ar;
+ fpar_type_t_ar = t_number;
+
+ local_def =
+    {func_def}   func_def  |
+    {func_decl}  func_decl |
+    {var_def}    var_def;
+
+ var_def =  t_id* type;
+
+ func_decl = header;
+
+ func_call = t_id expr*;
+
+ l_value =
+    {l_value_id}       t_id     |
+    {l_value_string}   t_string |
+    {l_value_array}    l_value   expr;
+
+ expr =
+    {plus}         [left]:expr  [right]:expr|
+    {minus}        [left]:expr  [right]:expr|
+    {post_mult}    [left]:expr  [right]:expr|
+    {post_div}     [left]:expr  [right]:expr|
+    {post_mod}     [left]:expr  [right]:expr|
+    {inplus}       expr                     |
+    {inminus}      expr                     |
+    {const}        t_number                 |
+    {char}         t_char_con               |
+    {func_call_type} func_call              |
+    {l_value_type}   l_value                |
+    {parenthesis}    expr;
 
 
