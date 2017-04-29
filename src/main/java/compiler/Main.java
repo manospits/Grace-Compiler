@@ -18,7 +18,7 @@ class Main{
             try{
                 Start tree = p.parse();
                 //System.out.println(tree.toString());
-                tree.apply(new PrintingVisitor());
+                //tree.apply(new PrintingVisitor());
               }
             catch(Exception e){
                 e.printStackTrace();

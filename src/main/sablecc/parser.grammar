@@ -133,38 +133,38 @@ Productions
     //<stmt> = ";" | <l-value> "<-" <expr> ";" | <block> | <func_call> ";"
     //       | "if" <cond> "then" <stmt> [ "else" <stmt> ]
     //       | "while" <cond> "do" <stmt> | return [<expr>] ";"
-    stmt =
-            {stmt_semi} t_semi                         |
-            {stmt_lvalue} l_value t_larrow expr t_semi |
-            {stmt_block} block                         |
-            {stmt_func_call} func_call t_semi          |
-            {stmt_if} if                               |
-            {stmt_return} t_return expr? t_semi        |
-            {stmt_while} while;
+    stmt {-> stmt} =
+            {stmt_semi} t_semi                         {-> New stmt.stmt_semi(t_semi)}          |
+            {stmt_lvalue} l_value t_larrow expr t_semi {-> New stmt.stmt_lvalue(l_value,expr)}  |
+            {stmt_block} block                         {-> New stmt.stmt_block([block.stmt])}   |
+            {stmt_func_call} func_call t_semi          {-> New stmt.stmt_func_call(func_call)}  |
+            {stmt_if} if                               {-> if.stmt}                             |
+            {stmt_return} t_return expr? t_semi        {-> New stmt.stmt_return(expr)}          |
+            {stmt_while} while {-> while.stmt };
 
-    while = t_while cond t_do stmt;
-    while_else = t_while cond t_do stmt_else;
+    while {-> stmt} = t_while cond t_do stmt {-> New stmt.stmt_while(cond,stmt)};
+    while_else{-> stmt} = t_while cond t_do stmt_else {-> New stmt.stmt_while(cond,stmt_else.stmt)};
 
-    if = if_header if_trail;
-    if_header = t_if cond t_then;
-    if_trail =
-            {without_else} stmt |
-            {with_else} stmt_else t_else stmt;
+    if{-> stmt} = if_header if_trail {-> New stmt.stmt_if(if_header.cond,[if_trail.stmt])};
+    if_header{-> cond} = t_if cond t_then {-> cond};
+    if_trail{-> stmt*} =
+            {without_else} stmt {-> [stmt]} |
+            {with_else} stmt_else t_else stmt{-> [stmt_else.stmt,stmt]};
 
-    stmt_else =
-            {stmt_else_semi} t_semi                         |
-            {stmt_else_lvalue} l_value t_larrow expr t_semi |
-            {stmt_else_block} block                         |
-            {stmt_else_func_call} func_call t_semi          |
-            {stmt_else_return} t_return expr? t_semi        |
-            {stmt_else_if} if_else                          |
-            {stmt_else_while} while_else;
+    stmt_else{-> stmt} =
+            {stmt_else_semi} t_semi                         {-> New stmt.stmt_semi(t_semi)}         |
+            {stmt_else_lvalue} l_value t_larrow expr t_semi {-> New stmt.stmt_lvalue(l_value,expr)} |
+            {stmt_else_block} block                         {-> New stmt.stmt_block([block.stmt])}  |
+            {stmt_else_func_call} func_call t_semi          {-> New stmt.stmt_func_call(func_call)} |
+            {stmt_else_return} t_return expr? t_semi        {-> New stmt.stmt_return(expr)}         |
+            {stmt_else_if} if_else                          {-> if_else.stmt}|
+            {stmt_else_while} while_else {-> while_else.stmt};
 
-    if_else = if_header [then]:stmt_else t_else [else]:stmt_else;
+    if_else{-> stmt} = if_header [then]:stmt_else t_else [else]:stmt_else {-> New stmt.stmt_if(if_header.cond,[then.stmt,else.stmt])};
 
 
     //<block> = "{" (<stmt>)* "}"
-    block{-> stmt*} = t_l_br stmt* t_r_br {-> [stmt]};
+    block{-> stmt*} = t_l_br stmt* t_r_br{-> [stmt] };
 
     //<func-call> = <id> "(" [ <expr> ( "," <expr> ) *] ")"
     func_call{-> func_call} = t_id t_l_par func_call_optional? t_r_par {-> New func_call(t_id,[func_call_optional.expr])};
@@ -206,29 +206,29 @@ Productions
     //     | <expr> ("=" | "#" | "<" | ">" "<=" | ">=") <expr>
 
     cond =
-        {cond_or}    cond t_or condand|
-        {cond_and}   condand;
+        {cond_or}    cond t_or condand {-> New cond.cond_or(cond,condand.cond)}|
+        {cond_and}   condand {-> condand.cond};
 
-    condand =
-        {condand_and} condand t_and condnot|
-        {cond_not}    condnot;
+    condand{-> cond} =
+        {condand_and} condand t_and condnot {-> New cond.condand_and(condand.cond,condnot.cond)}|
+        {cond_not}    condnot {-> condnot.cond};
 
-    condnot =
-        {condnot_not} t_not cond_bottom|
-        {cond_bottom} cond_bottom;
+    condnot{-> cond} =
+        {condnot_not} t_not cond_bottom {-> New cond.condnot_not(cond_bottom.cond)}|
+        {cond_bottom} cond_bottom {-> cond_bottom.cond};
 
-    cond_bottom =
-        {cond_equal}  [left]:expr t_s_equal  [right]:expr |
-        {cond_hash}   [left]:expr t_s_hash   [right]:expr |
-        {cond_bigger} [left]:expr t_s_bigger [right]:expr |
-        {cond_less}   [left]:expr t_s_less   [right]:expr |
-        {cond_leq}    [left]:expr t_s_leq    [right]:expr |
-        {cond_beq}    [left]:expr t_s_beq    [right]:expr |
-        {cond_par}    [left]:t_l_par cond t_r_par;
+    cond_bottom{-> cond} =
+        {cond_equal}  [left]:expr t_s_equal  [right]:expr {-> New cond.cond_equal(left.expr,right.expr)} |
+        {cond_hash}   [left]:expr t_s_hash   [right]:expr {-> New cond.cond_hash(left.expr,right.expr)}  |
+        {cond_bigger} [left]:expr t_s_bigger [right]:expr {-> New cond.cond_bigger(left.expr,right.expr)}|
+        {cond_less}   [left]:expr t_s_less   [right]:expr {-> New cond.cond_less(left.expr,right.expr)}  |
+        {cond_leq}    [left]:expr t_s_leq    [right]:expr {-> New cond.cond_leq(left.expr,right.expr)}   |
+        {cond_beq}    [left]:expr t_s_beq    [right]:expr {-> New cond.cond_beq(left.expr,right.expr)}   |
+        {cond_par}    [left]:t_l_par cond t_r_par {-> New cond.cond_par(cond)};
 
 Abstract Syntax Tree
 
- program = header local_def* stmt*;
+ program = func_def;
 
  func_def =  header local_def* stmt*;
 
@@ -259,6 +259,16 @@ Abstract Syntax Tree
 
  func_decl = header;
 
+ stmt =
+    {stmt_semi} t_semi         |
+    {stmt_lvalue} l_value expr |
+    {stmt_block} stmt*         |
+    {stmt_func_call} func_call |
+    {stmt_if} cond stmt*       |
+    {stmt_return} expr?        |
+    {stmt_while} cond stmt;
+
+
  func_call = t_id expr*;
 
  l_value =
@@ -280,4 +290,15 @@ Abstract Syntax Tree
     {l_value_type}   l_value                |
     {parenthesis}    expr;
 
+cond =
+    {cond_or}     [left]:cond [right]:cond  |
+    {condand_and} [left]:cond [right]:cond  |
+    {condnot_not} cond                      |
+    {cond_equal}  [left]:expr  [right]:expr |
+    {cond_hash}   [left]:expr  [right]:expr |
+    {cond_bigger} [left]:expr  [right]:expr |
+    {cond_less}   [left]:expr  [right]:expr |
+    {cond_leq}    [left]:expr  [right]:expr |
+    {cond_beq}    [left]:expr  [right]:expr |
+    {cond_par}    cond;
 
