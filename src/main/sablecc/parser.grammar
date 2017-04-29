@@ -248,7 +248,6 @@ Abstract Syntax Tree
 
  fpar_type = data_type fpar_type_t_ar_empty? t_number* ;
  fpar_type_t_ar_empty = t_l_ar t_r_ar;
- fpar_type_t_ar = t_number;
 
  local_def =
     {func_def}   func_def  |
