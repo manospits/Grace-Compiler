@@ -54,6 +54,7 @@ Tokens
   t_while    = 'while';
   t_id       = letter (letter | uscore | number)*;
   t_number   = (number)+;
+  t_number_e = (number)+ (letter|'_')+;
   t_char_con = quote common_char quote | quote escapeseq quote;
   t_string  = dquote (common_char | escapeseq )* dquote;
   t_s_plus   = '+';
@@ -191,8 +192,8 @@ Productions
             {infixplusminus}       expr_ipm {-> expr_ipm.expr};
 
     expr_ipm {-> expr}=
-            {inplus}  t_s_plus  expr_bottom {-> New expr.inplus(expr_bottom.expr)}|
-            {inminus} t_s_minus expr_bottom {-> New expr.inplus(expr_bottom.expr)}|
+            {inplus}  t_s_plus  expr_ipm {-> New expr.inplus(expr_ipm.expr)}|
+            {inminus} t_s_minus expr_ipm {-> New expr.inminus(expr_ipm.expr)}|
             {bottom} expr_bottom {-> expr_bottom.expr};
 
     expr_bottom{-> expr} =
@@ -214,7 +215,7 @@ Productions
         {cond_not}    condnot {-> condnot.cond};
 
     condnot{-> cond} =
-        {condnot_not} t_not cond_bottom {-> New cond.condnot_not(cond_bottom.cond)}|
+        {condnot_not} t_not condnot {-> New cond.condnot_not(condnot.cond)}|
         {cond_bottom} cond_bottom {-> cond_bottom.cond};
 
     cond_bottom{-> cond} =
@@ -230,7 +231,7 @@ Abstract Syntax Tree
 
  program = func_def;
 
- func_def =  header local_def* stmt*;
+ func_def =  header local_def* stmt*; //remember stmt* is a block
 
  header = t_id fpar_def* ret_type;
 
