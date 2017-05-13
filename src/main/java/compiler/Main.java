@@ -8,11 +8,13 @@ import java.io.*;
 class Main{
     public static void main(String[] arguments){
         try{
+            File initialFile = new File(arguments[0]);
+            InputStream progr = new FileInputStream(initialFile);
             Parser p =
                 new Parser(
                 new Lexer(
                 new PushbackReader(
-                new InputStreamReader(System.in), 1024)));
+                new InputStreamReader(progr), 1024)));
 
             // Parse the input.
             try{
