@@ -73,6 +73,9 @@ public class SymbolTable {
             if (symbols.get(prev).aSymbol.Depth==curDepth){
                 return 1;
             }
+            if(symbols.get(prev).aSymbol.type == "fun"){
+                return 1;
+            }
         }
         symbol_hash.put(name,symbols.size());
         temp = new record(prev,name,type,ret_type,curDepth,ref,array_sizes,arg_types);

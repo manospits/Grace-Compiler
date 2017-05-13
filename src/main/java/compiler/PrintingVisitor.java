@@ -13,12 +13,11 @@ public class PrintingVisitor extends DepthFirstAdapter{
     //func-def
     @Override
     public void inAFuncDef(AFuncDef node){
-        aSymbolTable.enter();
-
         String fun_name;
         String Type;
         String ret_type;
         ArrayList<argument> temp_args = new ArrayList<argument>();
+        int error;
 
         Type = "fun";
         fun_name = node.getTId().toString().replaceAll("\\s+","");
@@ -60,18 +59,53 @@ public class PrintingVisitor extends DepthFirstAdapter{
             List<TTId> id_copy = new ArrayList<TTId>(node_f.getTId());
             for(TTId id_e : id_copy)
             {
-                int error;
                 ids.add(id_e.toString().replaceAll("\\s+",""));
-                error=aSymbolTable.insert(id_e.toString().replaceAll("\\s+",""),TypeOfArg,"no",ref,array_sizes,null);
-                if(error==1){
-                    System.out.printf("Error (%d,%d) : \"%s\" < %s > has been redefined\n",id_e.getLine(),id_e.getPos(),id_e.toString().replaceAll("\\s+",""),Type);
-                }
             }
-            //function
+
             arg = new argument(TypeOfArg,ids,array_sizes,ref);
             temp_args.add(arg);
         }
-        aSymbolTable.insert(fun_name,Type,ret_type,false,null,temp_args);
+        error = aSymbolTable.insert(fun_name,Type,ret_type,false,null,temp_args);
+        if(error==1){
+            System.out.printf("Error (%d,%d) : \"%s\" < %s > has been redefined\n",node.getTId().getLine(),node.getTId().getPos(),fun_name,Type);
+        }
+        aSymbolTable.enter();
+        for(PFparDef e : copy)
+        {
+            node_f = (AFparDef) e;
+            ArrayList<Integer> array_sizes;
+            ArrayList<String> ids;
+            boolean ref = false;
+            String TypeOfArg;
+
+            //REF
+            if(node_f.getTRef() != null){
+                ref=true;
+            }
+
+            AFparType node_fp = (AFparType) node_f.getFparType();
+
+            //TYPE
+            TypeOfArg = node_fp.getDataType().toString().replaceAll("\\s+","");
+
+            //ARRAY
+            array_sizes =  new ArrayList<Integer>();
+            if(node_fp.getFparTypeTArEmpty() != null){
+                array_sizes.add(-1);
+            }
+            List<TTNumber> array_copy = new ArrayList<TTNumber>(node_fp.getTNumber());
+            for(TTNumber e_ar : array_copy)
+            {
+                array_sizes.add(Integer.parseInt(e_ar.toString().replaceAll("\\s+","")));
+            }
+
+            //IDS
+            ids = new ArrayList<String>();
+            List<TTId> id_copy = new ArrayList<TTId>(node_f.getTId());
+            for(TTId id_e : id_copy)
+            {
+            }
+        }
     }
 
     @Override
