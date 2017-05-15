@@ -20,8 +20,9 @@ public class SymbolTable {
         ArrayList<argument> arg_types;
         int Depth;
         boolean ref;
+        boolean declared;
 
-        public SymbolTableRecord(String name,String type,String ret_type, int Depth, boolean ref,ArrayList<Integer> array_sizes, ArrayList<argument> arg_types){
+        public SymbolTableRecord(String name,String type,String ret_type, int Depth, boolean ref,ArrayList<Integer> array_sizes, ArrayList<argument> arg_types,boolean declared ){
             this.name=name;
             this.type=type;
             this.Depth=Depth;
@@ -39,8 +40,8 @@ public class SymbolTable {
     class record {
         SymbolTableRecord aSymbol;
         int next;
-        public record(int next,String name,String type,String ret_type,int Depth, boolean ref,ArrayList<Integer> array_sizes,ArrayList<argument> arg_types){
-            aSymbol = new SymbolTableRecord(name,type,ret_type,Depth,ref,array_sizes,arg_types);
+        public record(int next,String name,String type,String ret_type,int Depth, boolean ref,ArrayList<Integer> array_sizes,ArrayList<argument> arg_types,boolean declared){
+            aSymbol = new SymbolTableRecord(name,type,ret_type,Depth,ref,array_sizes,arg_types,declared);
             this.next = next;
         }
     }
@@ -59,7 +60,7 @@ public class SymbolTable {
         depths.add(-1);
     }
 
-    public int insert(String name,String type,String ret_type,boolean ref,ArrayList<Integer> array_sizes,ArrayList<argument> arg_types){
+    public int insert(String name,String type,String ret_type,boolean ref,ArrayList<Integer> array_sizes,ArrayList<argument> arg_types,boolean declared){
         int prev;
         record temp;
         if(depths.get(curDepth)==-1){
@@ -78,7 +79,7 @@ public class SymbolTable {
             }
         }
         symbol_hash.put(name,symbols.size());
-        temp = new record(prev,name,type,ret_type,curDepth,ref,array_sizes,arg_types);
+        temp = new record(prev,name,type,ret_type,curDepth,ref,array_sizes,arg_types,declared);
         symbols.add(temp);
         return 0;
     }

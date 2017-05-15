@@ -65,7 +65,7 @@ public class PrintingVisitor extends DepthFirstAdapter{
             arg = new argument(TypeOfArg,ids,array_sizes,ref);
             temp_args.add(arg);
         }
-        error = aSymbolTable.insert(fun_name,Type,ret_type,false,null,temp_args);
+        error = aSymbolTable.insert(fun_name,Type,ret_type,false,null,temp_args,true);
         if(error==1){
             System.out.printf("Error (%d,%d) : \"%s\" < %s > has been redefined\n",node.getTId().getLine(),node.getTId().getPos(),fun_name,Type);
         }
@@ -104,6 +104,10 @@ public class PrintingVisitor extends DepthFirstAdapter{
             List<TTId> id_copy = new ArrayList<TTId>(node_f.getTId());
             for(TTId id_e : id_copy)
             {
+                error=aSymbolTable.insert(id_e.toString().replaceAll("\\s+",""),TypeOfArg,"no",ref,array_sizes,null,false);
+                if(error==1){
+                    System.out.printf("Error (%d,%d) : \"%s\" < %s > has been redefined\n",id_e.getLine(),id_e.getPos(),id_e.toString().replaceAll("\\s+",""),Type);
+                }
             }
         }
     }
@@ -194,7 +198,7 @@ public class PrintingVisitor extends DepthFirstAdapter{
             temp_args.add(arg);
         }
         int error;
-        error=aSymbolTable.insert(fun_name,Type,ret_type,false,null,temp_args);
+        error=aSymbolTable.insert(fun_name,Type,ret_type,false,null,temp_args,false);
         if(error==1){
             System.out.printf("Error (%d,%d) : \"%s\" < %s > has been redefined\n",node.getTId().getLine(),node.getTId().getPos(),fun_name,Type);
         }
@@ -226,7 +230,7 @@ public class PrintingVisitor extends DepthFirstAdapter{
         for(TTId e : id_copy)
         {
             int error;
-            error=aSymbolTable.insert(e.toString().replaceAll("\\s+",""),Type,"no",false,array_sizes,null);
+            error=aSymbolTable.insert(e.toString().replaceAll("\\s+",""),Type,"no",false,array_sizes,null,false);
             if(error==1){
                 System.out.printf("Error (%d,%d) : \"%s\" < %s > has been redefined\n",e.getLine(),e.getPos(),e.toString().replaceAll("\\s+",""),Type);
             }
