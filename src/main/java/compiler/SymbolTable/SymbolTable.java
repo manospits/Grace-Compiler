@@ -43,7 +43,7 @@ public class SymbolTable {
     }
 
     public void print_error(int line,int pos ,String error){
-        System.out.printf("Error found (l:%d,p:%d) : %s\n",line,pos,error);
+        System.out.printf("[ERROR] (l:%d,p:%d) \t: %s\n",line,pos,error);
     }
 
     class record {
@@ -88,17 +88,72 @@ public class SymbolTable {
                 //System.out.println("same depth");
                 if(foundSymbol.type == "fun"){
                     if(declared == false){
-                        error =String.format("function \"%s\" has been redeclared in (l:%d,p:%d)",name,foundSymbol.line,foundSymbol.pos);
+                        error =String.format("function \"%s\" has been redeclared (l:%d,p:%d)",name,foundSymbol.line,foundSymbol.pos);
                         print_error(line,pos,error);
                         return 1;
                     }
                     if(declared == true){
                         if(foundSymbol.declared == true){
-                            error=String.format("function \"%s\" has been redefined in (l:%d,p:%d)",name,foundSymbol.line,foundSymbol.pos);
+                            error=String.format("function \"%s\" has been redefined (l:%d,p:%d)",name,foundSymbol.line,foundSymbol.pos);
                             print_error(line,pos,error);
                             return 1;
                         }
                         else{
+                            if (arg_types.size() != foundSymbol.arg_types.size()){
+                                error=String.format("function \"%s\" definition doesn't match function declaration (l:%d,p:%d)",name,foundSymbol.line,foundSymbol.pos);
+                                print_error(line,pos,error);
+                                return 1;
+                            }
+                            else{
+                                for(int i=0;i<arg_types.size();i++){
+                                    if(!arg_types.get(i).Type.equals(foundSymbol.arg_types.get(i).Type)){
+                                        error=String.format("function \"%s\" definition type (%d) <%s> doesn't match ",name,i+1,arg_types.get(i).Type);
+                                        error+=String.format("type (%d) <%s> of ",i+1, foundSymbol.arg_types.get(i).Type);
+                                        error+=String.format("function declaration (l:%d,p:%d)",foundSymbol.line, foundSymbol.pos);
+                                        print_error(line,pos,error);
+                                        return 1;
+                                    }
+                                    if(arg_types.get(i).array_sizes.size()!=foundSymbol.arg_types.get(i).array_sizes.size()){
+                                        error=String.format("function \"%s\" definition type (%d) <%s> dimension (%d) ",name,i+1,arg_types.get(i).Type,arg_types.get(i).array_sizes.size());
+                                        error+=String.format("doesn't match dimension (%d) type (%d) <%s> ",foundSymbol.arg_types.get(i).array_sizes.size(), i+1, foundSymbol.arg_types.get(i).Type);
+                                        error+=String.format("of function declaration (l:%d,p:%d)", foundSymbol.line, foundSymbol.pos);
+                                        print_error(line,pos,error);
+                                        return 1;
+                                    }
+                                    else{
+                                        for(int j=0;j<arg_types.get(i).array_sizes.size();j++){
+                                            if(arg_types.get(i).array_sizes.get(j)!=foundSymbol.arg_types.get(i).array_sizes.get(j)){
+                                                if(arg_types.get(i).array_sizes.get(j)==-1){
+                                                   error=String.format("function \"%s\" definition type (%d) <%s> dimension (%d) size [] ",name,i+1,arg_types.get(i).Type,arg_types.get(i).array_sizes.size());
+                                                   error+=String.format("doesn't match dimension (%d) size [%d] type (%d) <%s> of",foundSymbol.arg_types.get(i).array_sizes.size(),foundSymbol.arg_types.get(i).array_sizes.get(j), i+1, foundSymbol.arg_types.get(i).Type);
+                                                   error+=String.format(" function declaration (l:%d,p:%d)",  foundSymbol.line, foundSymbol.pos);
+                                                   print_error(line,pos,error);
+                                                }
+                                                else if(foundSymbol.arg_types.get(i).array_sizes.get(j)==-1){
+                                                    error=String.format("function \"%s\" definition type (%d) <%s> dimension (%d) size [%d]",name,i+1,arg_types.get(i).Type,arg_types.get(i).array_sizes.size(),arg_types.get(i).array_sizes.get(j));
+                                                    error+=String.format(" doesn't match dimension (%d) size [] type (%d) <%s> ",foundSymbol.arg_types.get(i).array_sizes.size(), i+1, foundSymbol.arg_types.get(i).Type);
+                                                    error+=String.format("of function declaration (l:%d,p:%d)",  foundSymbol.line, foundSymbol.pos);
+                                                    print_error(line,pos,error);
+                                                }
+                                                else{
+                                                    error=String.format("function \"%s\" definition type (%d) <%s> dimension (%d) size [%d] ",name,i+1,arg_types.get(i).Type,arg_types.get(i).array_sizes.size(),arg_types.get(i).array_sizes.get(j));
+                                                    error+=String.format("doesn't match dimension (%d) size [%d] type (%d) <%s>",foundSymbol.arg_types.get(i).array_sizes.size(),foundSymbol.arg_types.get(i).array_sizes.get(j), i+1, foundSymbol.arg_types.get(i).Type);
+                                                    error+=String.format(" of function declaration (l:%d,p:%d)",  foundSymbol.line, foundSymbol.pos);
+                                                    print_error(line,pos,error);
+                                                }
+                                                return 1;
+                                            }
+                                        }
+                                    }
+                                    //numbers of arguments of above type
+                                    if(arg_types.get(i).ids.size()!=foundSymbol.arg_types.get(i).ids.size()){
+                                        error=String.format("function \"%s\" definition arguments (n:%d) of type (%d) <%s> dimension (%d) doesn't match function ",name,arg_types.get(i).ids.size(),i+1,arg_types.get(i).Type,arg_types.get(i).array_sizes.size());
+                                        error+=String.format("declaration arguments (n:%d) of type (%d) <%s> dimension (%d) (l:%d,p:%d)",foundSymbol.arg_types.get(i).ids.size(),i+1, foundSymbol.arg_types.get(i).Type,foundSymbol.arg_types.get(i).array_sizes.size(),foundSymbol.line,foundSymbol.pos);
+                                        print_error(line,pos,error);
+                                        return 1;
+                                    }
+                                }
+                            }
                             //modify existing fun record in symbol table
                             foundSymbol.declared = true;
                             return 0;
@@ -106,7 +161,7 @@ public class SymbolTable {
                     }
                 }
                 else{
-                    error= String.format("id \"%s\" <%s> has been redefined in (l:%d,p:%d)",name,type,foundSymbol.line,foundSymbol.pos);
+                    error= String.format("id \"%s\" <%s> has been redefined (l:%d,p:%d) <%s>",name,type,foundSymbol.line,foundSymbol.pos,foundSymbol.type);
                     print_error(line,pos,error);
                     return 1;
                 }

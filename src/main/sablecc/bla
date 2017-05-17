@@ -89,10 +89,10 @@ Productions
     program{-> program} = func_def {-> New program(func_def)};
 
     //<func-def> = <header> (<local_def>)* <block>
-    func_def {-> func_def} =  header local_def* block {-> New func_def(header.t_id,[header.fpar_def],header.ret_type,[local_def],[block.stmt])};
+    func_def {-> func_def} =  header local_def* block {-> New func_def(header,[local_def],block)};
 
-    //<header> = "fun" <id> "("<fpar-def> (";" <fpar-def>)* ")" : <ret-type>
-    header {-> t_id fpar_def* ret_type}   = t_fun t_id t_l_par header_members? t_r_par t_uddot ret_type {-> t_id [header_members.fpar_def] ret_type};
+    //<header> = "fun" <id> "("<fpar-def> (";" <fpar-def>)() ")" : <ret-type>
+    header {-> header}   = t_fun t_id t_l_par header_members? t_r_par t_uddot ret_type {-> New header(t_id,[header_members.fpar_def],ret_type)};
     header_semi_fpardef {-> fpar_def} = t_semi fpar_def {-> fpar_def};
     header_members {-> fpar_def*} = fpar_def header_semi_fpardef* {-> [fpar_def,header_semi_fpardef.fpar_def]};
 
@@ -106,7 +106,7 @@ Productions
             {char} t_char {-> New data_type.char(t_char)};
 
     //<type> = <data-type> ("[" <int-const> "]")*
-    type{-> data_type t_number*} = data_type array_dec*{-> data_type [array_dec.t_number]};
+    type{-> type} = data_type array_dec*{-> New type(data_type,[array_dec.t_number])};
     array_dec{-> t_number} = t_l_ar t_number t_r_ar {-> t_number};
 
     //<ret-type> <data-type> | "nothing"
@@ -126,10 +126,10 @@ Productions
         {var_def}    var_def {-> New local_def.var_def(var_def)};
 
     //<var-def> = "var" <id> (",",<id>)* ":" <type> ";"
-    var_def {-> var_def}   = t_var t_id id_comma* t_uddot type t_semi{-> New var_def([t_id,id_comma.t_id],type.data_type,[type.t_number])};
+    var_def {-> var_def}   = t_var t_id id_comma* t_uddot type t_semi{-> New var_def([t_id,id_comma.t_id],type)};
 
     //<func-decl> = <header> ";"
-    func_decl{-> func_decl} = header t_semi{-> New func_decl(header.t_id,[header.fpar_def],header.ret_type)};
+    func_decl{-> func_decl} = header t_semi{-> New func_decl(header)};
 
     //<stmt> = ";" | <l-value> "<-" <expr> ";" | <block> | <func_call> ";"
     //       | "if" <cond> "then" <stmt> [ "else" <stmt> ]
@@ -137,7 +137,7 @@ Productions
     stmt {-> stmt} =
             {stmt_semi} t_semi                         {-> New stmt.stmt_semi(t_semi)}          |
             {stmt_lvalue} l_value t_larrow expr t_semi {-> New stmt.stmt_lvalue(l_value,expr)}  |
-            {stmt_block} block                         {-> New stmt.stmt_block([block.stmt])}   |
+            {stmt_block} block                         {-> New stmt.stmt_block(block)}   |
             {stmt_func_call} func_call t_semi          {-> New stmt.stmt_func_call(func_call)}  |
             {stmt_if} if                               {-> if.stmt}                             |
             {stmt_return} t_return expr? t_semi        {-> New stmt.stmt_return(expr)}          |
@@ -146,26 +146,26 @@ Productions
     while {-> stmt} = t_while cond t_do stmt {-> New stmt.stmt_while(cond,stmt)};
     while_else{-> stmt} = t_while cond t_do stmt_else {-> New stmt.stmt_while(cond,stmt_else.stmt)};
 
-    if{-> stmt} = if_header if_trail {-> New stmt.stmt_if(if_header.cond,[if_trail.then],[if_trail.else])};
+    if{-> stmt} = if_header if_trail {-> New stmt.stmt_if(if_header.cond,[if_trail.stmt])};
     if_header{-> cond} = t_if cond t_then {-> cond};
-    if_trail{-> [then]:stmt* [else]:stmt*} =
-            {without_else} stmt {-> [stmt] []} |
-            {with_else} stmt_else t_else stmt{-> [stmt_else.stmt] [stmt]};
+    if_trail{-> stmt*} =
+            {without_else} stmt {-> [stmt]} |
+            {with_else} stmt_else t_else stmt{-> [stmt_else.stmt,stmt]};
 
     stmt_else{-> stmt} =
             {stmt_else_semi} t_semi                         {-> New stmt.stmt_semi(t_semi)}         |
             {stmt_else_lvalue} l_value t_larrow expr t_semi {-> New stmt.stmt_lvalue(l_value,expr)} |
-            {stmt_else_block} block                         {-> New stmt.stmt_block([block.stmt])}  |
+            {stmt_else_block} block                         {-> New stmt.stmt_block(block)}  |
             {stmt_else_func_call} func_call t_semi          {-> New stmt.stmt_func_call(func_call)} |
             {stmt_else_return} t_return expr? t_semi        {-> New stmt.stmt_return(expr)}         |
             {stmt_else_if} if_else                          {-> if_else.stmt}|
             {stmt_else_while} while_else {-> while_else.stmt};
 
-    if_else{-> stmt} = if_header [then]:stmt_else t_else [else]:stmt_else {-> New stmt.stmt_if(if_header.cond,[then.stmt],[else.stmt])};
+    if_else{-> stmt} = if_header [then]:stmt_else t_else [else]:stmt_else {-> New stmt.stmt_if(if_header.cond,[then.stmt,else.stmt])};
 
 
     //<block> = "{" (<stmt>)* "}"
-    block{-> stmt*} = t_l_br stmt* t_r_br{-> [stmt] };
+    block{-> block} = t_l_br stmt* t_r_br{-> New block([stmt]) };
 
     //<func-call> = <id> "(" [ <expr> ( "," <expr> ) *] ")"
     func_call{-> func_call} = t_id t_l_par func_call_optional? t_r_par {-> New func_call(t_id,[func_call_optional.expr])};
@@ -174,10 +174,9 @@ Productions
 
     //<l-value> = <id> | <string-literal> | <l-value> "[" <expr> "]"
     l_value {-> l_value} =
-        {l_value_id}       t_id    l_val_ar*  {-> New l_value.l_value_id(t_id,[l_val_ar.expr])} |
-        {l_value_string}   t_string l_val_ar* {-> New l_value.l_value_string(t_string,[l_val_ar.expr])} ;
-
-    l_val_ar {-> expr } = t_l_ar expr t_r_ar {-> expr};
+        {l_value_id}       t_id    {-> New l_value.l_value_id(t_id)} |
+        {l_value_string}   t_string {-> New l_value.l_value_string(t_string)} |
+        {l_value_array}    l_value  t_l_ar expr t_r_ar {-> New l_value.l_value_array(l_value,expr)};
 
     //<expr> = <int-const> | <char-const> | <l-value> | <func-call> | "(" <expr> ")"
     //       | ( "+" | "-" ) <expr> ("+" | "-" | "*" | "div" | "mod" ) <expr>
@@ -232,13 +231,17 @@ Abstract Syntax Tree
 
  program = func_def;
 
- func_def =  t_id fpar_def* ret_type local_def* stmt*;
+ func_def =  header local_def* block; //remember stmt* is a block
+
+ header = t_id fpar_def* ret_type;
 
  fpar_def = t_ref? t_id* fpar_type;
 
  data_type =
         {int} t_int |
         {char} t_char;
+
+ type = data_type t_number*;
 
  ret_type =
     {ret_data_type} data_type |
@@ -252,25 +255,28 @@ Abstract Syntax Tree
     {func_decl}  func_decl |
     {var_def}    var_def;
 
- var_def =  t_id* data_type t_number*;
+ var_def =  t_id* type;
 
- func_decl = t_id fpar_def* ret_type;
+ func_decl = header;
+
+ block = stmt* ;
 
  stmt =
-    {stmt_semi} t_semi                            |
-    {stmt_lvalue} l_value expr                    |
-    {stmt_block} stmt*                            |
-    {stmt_func_call} func_call                    |
-    {stmt_if} cond [then]:stmt* [else]:stmt*      |
-    {stmt_return} expr?                           |
+    {stmt_semi} t_semi         |
+    {stmt_lvalue} l_value expr |
+    {stmt_block} block         |
+    {stmt_func_call} func_call |
+    {stmt_if} cond stmt*       |
+    {stmt_return} expr?        |
     {stmt_while} cond stmt;
 
 
  func_call = t_id expr*;
 
  l_value =
-    {l_value_id}       t_id     expr*|
-    {l_value_string}   t_string expr*;
+    {l_value_id}       t_id     |
+    {l_value_string}   t_string |
+    {l_value_array}    l_value   expr;
 
  expr =
     {plus}         [left]:expr  [right]:expr|
