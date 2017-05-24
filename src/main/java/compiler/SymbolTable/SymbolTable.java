@@ -22,14 +22,16 @@ public class SymbolTable {
         int Depth;
         boolean ref;
         boolean declared;
+        boolean arg;
 
-        public SymbolTableRecord(int line,int pos,String name,String type,String ret_type, int Depth, boolean ref,ArrayList<Integer> array_sizes, ArrayList<argument> arg_types,boolean declared ){
+        public SymbolTableRecord(int line,int pos,String name,String type,String ret_type, int Depth, boolean ref,ArrayList<Integer> array_sizes, ArrayList<argument> arg_types,boolean declared ,boolean arg){
             this.line = line;
             this.pos = pos;
             this.name=name;
             this.type=type;
             this.Depth=Depth;
             this.ref=ref;
+            this.arg = arg;
             this.declared = declared;
             this.ret_type = ret_type;
             if(array_sizes!=null){
@@ -44,14 +46,14 @@ public class SymbolTable {
 
     public void print_error(int line,int pos ,String error){
         System.out.printf("[ERROR] (l:%d,p:%d) \t: %s\n",line,pos,error);
-        //System.exit(0);
+        System.exit(0);
     }
 
     class record {
         SymbolTableRecord aSymbol;
         int next;
-        public record(int next,int line,int pos,String name,String type,String ret_type,int Depth, boolean ref,ArrayList<Integer> array_sizes,ArrayList<argument> arg_types,boolean declared){
-            aSymbol = new SymbolTableRecord(line,pos,name,type,ret_type,Depth,ref,array_sizes,arg_types,declared);
+        public record(int next,int line,int pos,String name,String type,String ret_type,int Depth, boolean ref,ArrayList<Integer> array_sizes,ArrayList<argument> arg_types,boolean declared,boolean arg){
+            aSymbol = new SymbolTableRecord(line,pos,name,type,ret_type,Depth,ref,array_sizes,arg_types,declared,arg);
             this.next = next;
         }
     }
@@ -70,7 +72,7 @@ public class SymbolTable {
         depths.add(-1);
     }
 
-    public int insert(int line, int pos,String name,String type,String ret_type,boolean ref,ArrayList<Integer> array_sizes,ArrayList<argument> arg_types,boolean declared){
+    public int insert(int line, int pos,String name,String type,String ret_type,boolean ref,ArrayList<Integer> array_sizes,ArrayList<argument> arg_types,boolean declared,boolean arg){
         int prev;
         record temp;
         String error;
@@ -167,10 +169,22 @@ public class SymbolTable {
                     return 1;
                 }
             }
+            else{
+                if(foundSymbol.type.equals("fun")){
+                    error =String.format("overshadowing \"%s\" <%s> (l:%d,p:%d) with \"%s\" <%s> is not permitted",foundSymbol.name,foundSymbol.type,foundSymbol.line,foundSymbol.pos,name,type);
+                    print_error(line,pos,error);
+                    return 1;
+                }
+                else if(type.equals("fun")){
+                    error =String.format("overshadowing \"%s\" <%s> (l:%d,p:%d) with \"%s\" <%s> is not permitted",foundSymbol.name,foundSymbol.type,foundSymbol.line,foundSymbol.pos,name,type);
+                    print_error(line,pos,error);
+                    return 1;
+                }
+            }
         }
         //new record in symbol table
         symbol_hash.put(name,symbols.size());
-        temp = new record(prev,line,pos,name,type,ret_type,curDepth,ref,array_sizes,arg_types,declared);
+        temp = new record(prev,line,pos,name,type,ret_type,curDepth,ref,array_sizes,arg_types,declared,arg);
         symbols.add(temp);
         return 0;
     }

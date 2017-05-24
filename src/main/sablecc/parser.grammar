@@ -89,7 +89,7 @@ Productions
     program{-> program} = func_def {-> New program(func_def)};
 
     //<func-def> = <header> (<local_def>)* <block>
-    func_def {-> func_def} =  header local_def* block {-> New func_def(header.t_id,[header.fpar_def],header.ret_type,[local_def],[block.stmt])};
+    func_def {-> func_def} =  header local_def* func_def_block {-> New func_def(header.t_id,[header.fpar_def],header.ret_type,[local_def],func_def_block)};
 
     //<header> = "fun" <id> "("<fpar-def> (";" <fpar-def>)* ")" : <ret-type>
     header {-> t_id fpar_def* ret_type}   = t_fun t_id t_l_par header_members? t_r_par t_uddot ret_type {-> t_id [header_members.fpar_def] ret_type};
@@ -165,7 +165,8 @@ Productions
 
 
     //<block> = "{" (<stmt>)* "}"
-    block{-> stmt*} = t_l_br stmt* t_r_br{-> [stmt] };
+    block{-> stmt* } = t_l_br stmt* t_r_br{-> [stmt] };
+    func_def_block{-> func_def_block } = t_l_br stmt* t_r_br{->New func_def_block ([stmt]) };
 
     //<func-call> = <id> "(" [ <expr> ( "," <expr> ) *] ")"
     func_call{-> func_call} = t_id t_l_par func_call_optional? t_r_par {-> New func_call(t_id,[func_call_optional.expr])};
@@ -176,6 +177,11 @@ Productions
     l_value {-> l_value} =
         {l_value_id}       t_id    l_val_ar*  {-> New l_value.l_value_id(t_id,[l_val_ar.expr])} |
         {l_value_string}   t_string l_val_ar* {-> New l_value.l_value_string(t_string,[l_val_ar.expr])} ;
+
+//    l_value {-> l_value} =
+//        {l_value_id}       t_id    {-> New l_value.l_value_id(t_id)} |
+//        {l_value_string}   t_string {-> New l_value.l_value_string(t_string)} |
+//        {l_value_array}    l_value  t_l_ar expr t_r_ar {-> New l_value.l_value_array(l_value,expr)};
 
     l_val_ar {-> expr } = t_l_ar expr t_r_ar {-> expr};
 
@@ -232,7 +238,9 @@ Abstract Syntax Tree
 
  program = func_def;
 
- func_def =  t_id fpar_def* ret_type local_def* stmt*;
+ func_def =  t_id fpar_def* ret_type local_def* func_def_block;
+
+ func_def_block = stmt*;
 
  fpar_def = t_ref? t_id* fpar_type;
 
