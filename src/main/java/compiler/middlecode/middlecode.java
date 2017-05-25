@@ -19,7 +19,7 @@ public class middlecode{
         }
     }
 
-    int temp_variable_index = 1;
+    int temp_variable_index = 0;
     ArrayList<quad> quads = new ArrayList<quad>();
     ArrayList<String> var_types = new ArrayList <String>();
 

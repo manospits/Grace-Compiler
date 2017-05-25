@@ -207,14 +207,26 @@ public class PrintingVisitor extends DepthFirstAdapter{
                 e.apply(this);
             }
         }
-        if(node.getFuncDefBlock() != null)
         {
-
             SymbolTable.SymbolTableRecord foundSymbol=aSymbolTable.lookup(node.getTId().toString().replaceAll("\\s+",""));
             aMiddleCode.genquad("unit",String.format("%s_%d",foundSymbol.name,foundSymbol.Depth),"-","-");
-            node.getFuncDefBlock().apply(this);
+
+            ArrayList<Integer> L=aMiddleCode.emptylist();
+            List<PStmt> copy = new ArrayList<PStmt>(node.getStmt());
+            info_node a_stmt;
+            for(PStmt e : copy)
+            {
+                e.apply(this);
+                a_stmt=mi_info_nodes.remove(mi_info_nodes.size()-1);
+                L = a_stmt.Next;
+                aMiddleCode.backpatch(L,aMiddleCode.nextquad());
+            }
+            info_node temp_mi = new info_node("","block",L,null,null,false);
+            mi_info_nodes.add(temp_mi);
+
             aMiddleCode.genquad("endu",String.format("%s_%d",foundSymbol.name,foundSymbol.Depth),"-","-");
         }
+
         outAFuncDef(node);
     }
 
@@ -584,23 +596,29 @@ public class PrintingVisitor extends DepthFirstAdapter{
                 int pos2remove_m = mi_info_nodes.size() - dims;
                 info_node index;
                 String tW="";
-                for(int i=0; i < dims-1 ; i++ ){
-                    index = mi_info_nodes.remove(pos2remove_m);
-                    W  = aMiddleCode.newtemp("int");
-                    int width=aSymbol.array_sizes.get(i+1);
-                    for(int j=i+2;j<dims;j++){
-                        width*=aSymbol.array_sizes.get(j);
+                if(dims>1){
+                    for(int i=0; i < dims-1 ; i++ ){
+                        index = mi_info_nodes.remove(pos2remove_m);
+                        W  = aMiddleCode.newtemp("int");
+                        int width=aSymbol.array_sizes.get(i+1);
+                        for(int j=i+2;j<dims;j++){
+                            width*=aSymbol.array_sizes.get(j);
+                        }
+                        aMiddleCode.genquad("*",String.format("%d",width),index.place,W);
+                        if(i!=0)
+                            aMiddleCode.genquad("+",tW,W,tW);
+                        else
+                            tW=W;
                     }
-                    aMiddleCode.genquad("*",String.format("%d",width),index.place,W);
-                    if(i!=0)
-                        aMiddleCode.genquad("+",tW,W,tW);
-                    else
-                        tW=W;
+                    W  = aMiddleCode.newtemp("int");
+                    index = mi_info_nodes.remove(pos2remove_m);
+                    aMiddleCode.genquad("+",index.place,tW,W);
+                    tW=W;
                 }
-                W  = aMiddleCode.newtemp("int");
-                index = mi_info_nodes.remove(pos2remove_m);
-                aMiddleCode.genquad("+",index.place,tW,W);
-                tW=W;
+                else{
+                    index = mi_info_nodes.remove(pos2remove_m);
+                    tW=index.place;
+                }
                 W = aMiddleCode.newtemp("int");
                 aMiddleCode.genquad("array",node.getTId().toString().replaceAll("\\s+",""),tW,W);
                 temp_mi = new info_node(W,"int",null,null,null,true);
@@ -1024,7 +1042,7 @@ public class PrintingVisitor extends DepthFirstAdapter{
     {
         info_node stmt=null,cond=null;
         inAStmtWhileStmt(node);
-        int Q= aMiddleCode.nextquad();
+        int Q = aMiddleCode.nextquad();
         if(node.getCond() != null)
         {
             node.getCond().apply(this);
@@ -1204,50 +1222,21 @@ public class PrintingVisitor extends DepthFirstAdapter{
     public void caseAStmtBlockStmt(AStmtBlockStmt node)
     {
         ArrayList<Integer> L=aMiddleCode.emptylist();
-        boolean first=true;
         inAStmtBlockStmt(node);
         {
             info_node a_stmt;
             List<PStmt> copy = new ArrayList<PStmt>(node.getStmt());
             for(PStmt e : copy)
             {
-                if(!first){
-                    aMiddleCode.backpatch(L,aMiddleCode.nextquad());
-                }
                 e.apply(this);
-                first=false;
                 a_stmt=mi_info_nodes.remove(mi_info_nodes.size()-1);
                 L = a_stmt.Next;
+                aMiddleCode.backpatch(L,aMiddleCode.nextquad());
             }
             info_node temp_mi = new info_node("","block",L,null,null,false);
             mi_info_nodes.add(temp_mi);
         }
         outAStmtBlockStmt(node);
-    }
-
-    @Override
-    public void caseAFuncDefBlock(AFuncDefBlock node)
-    {
-        ArrayList<Integer> L=aMiddleCode.emptylist();
-        boolean first=true;
-        inAFuncDefBlock(node);
-        {
-            info_node a_stmt;
-            List<PStmt> copy = new ArrayList<PStmt>(node.getStmt());
-            for(PStmt e : copy)
-            {
-                if(!first){
-                    aMiddleCode.backpatch(L,aMiddleCode.nextquad());
-                }
-                e.apply(this);
-                first=false;
-                a_stmt=mi_info_nodes.remove(mi_info_nodes.size()-1);
-                L = a_stmt.Next;
-            }
-            info_node temp_mi = new info_node("","block",L,null,null,false);
-            mi_info_nodes.add(temp_mi);
-        }
-        outAFuncDefBlock(node);
     }
 
 }
