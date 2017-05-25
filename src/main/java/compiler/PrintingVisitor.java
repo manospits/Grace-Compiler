@@ -80,6 +80,16 @@ public class PrintingVisitor extends DepthFirstAdapter{
         return false;
     }
 
+    @Override
+    public void inAProgram(AProgram node){
+        aSymbolTable.add_basic_functions();
+    }
+
+    @Override
+    public void outAProgram(AProgram node){
+        aMiddleCode.print_quads();
+    }
+
     //func-def
     @Override
     public void inAFuncDef(AFuncDef node){
@@ -169,6 +179,43 @@ public class PrintingVisitor extends DepthFirstAdapter{
                 }
             }
         }
+    }
+
+    @Override
+    public void caseAFuncDef(AFuncDef node)
+    {
+        inAFuncDef(node);
+        if(node.getTId() != null)
+        {
+            node.getTId().apply(this);
+        }
+        {
+            List<PFparDef> copy = new ArrayList<PFparDef>(node.getFparDef());
+            for(PFparDef e : copy)
+            {
+                e.apply(this);
+            }
+        }
+        if(node.getRetType() != null)
+        {
+            node.getRetType().apply(this);
+        }
+        {
+            List<PLocalDef> copy = new ArrayList<PLocalDef>(node.getLocalDef());
+            for(PLocalDef e : copy)
+            {
+                e.apply(this);
+            }
+        }
+        if(node.getFuncDefBlock() != null)
+        {
+
+            SymbolTable.SymbolTableRecord foundSymbol=aSymbolTable.lookup(node.getTId().toString().replaceAll("\\s+",""));
+            aMiddleCode.genquad("unit",String.format("%s_%d",foundSymbol.name,foundSymbol.Depth),"-","-");
+            node.getFuncDefBlock().apply(this);
+            aMiddleCode.genquad("endu",String.format("%s_%d",foundSymbol.name,foundSymbol.Depth),"-","-");
+        }
+        outAFuncDef(node);
     }
 
     @Override
@@ -511,7 +558,7 @@ public class PrintingVisitor extends DepthFirstAdapter{
                 error = String.format("accessing dimension (%d) when id \"%s\" has (%d) ",dims,node.getTId().toString().replaceAll("\\s+",""),aSymbol.array_sizes.size());
                 aSymbolTable.print_error(node.getTId().getLine(),node.getTId().getPos(),error);
             }
-            //TODO TYPE check
+        //TODO TYPE check
         }
         for(int i=0; i < dims ; i++ ){
             array_index=type_stack.remove(pos2remove);
@@ -575,16 +622,22 @@ public class PrintingVisitor extends DepthFirstAdapter{
             aSymbolTable.print_error(node.getTString().getLine(),node.getTString().getPos(),error);
         }
         info_node index;
-        for(int i=0; i < dims ; i++ ){
-            array_index=type_stack.remove(pos2remove);
-            if(!equiv(array_index,int_type)){
-                error = String.format("%s <%s> is not accepted in array index (%d)",array_index.name,array_index.Type,i+1);
-                aSymbolTable.print_error(array_index.line,array_index.pos,error);
+        if(dims!=0){
+            for(int i=0; i < dims ; i++ ){
+                array_index=type_stack.remove(pos2remove);
+                if(!equiv(array_index,int_type)){
+                    error = String.format("%s <%s> is not accepted in array index (%d)",array_index.name,array_index.Type,i+1);
+                    aSymbolTable.print_error(array_index.line,array_index.pos,error);
+                }
+                index = mi_info_nodes.remove(pos2remove_m);
+                W = aMiddleCode.newtemp("int");
+                aMiddleCode.genquad("array",node.getTString().toString().replaceAll("\\s+",""),index.place,W);
+                temp_mi = new info_node(W,"char",null,null,null,true);
+                mi_info_nodes.add(temp_mi);
             }
-            index = mi_info_nodes.remove(pos2remove_m);
-            W = aMiddleCode.newtemp("int");
-            aMiddleCode.genquad("array",node.getTString().toString().replaceAll("\\s+",""),index.place,W);
-            temp_mi = new info_node(W,"char",null,null,null,true);
+        }
+        else{
+            temp_mi = new info_node(node.getTString().toString().replaceAll("\\s+",""),"char",null,null,null,true);
             mi_info_nodes.add(temp_mi);
         }
         type_info temp = new type_info(node.getTString().getLine(),node.getTString().getPos(),node.getTString().toString().replaceAll("\\s+",""),"char",string_dim,dims,true);
@@ -631,7 +684,7 @@ public class PrintingVisitor extends DepthFirstAdapter{
             rightplace = String.format("[%s]",rightm.place);
         }
         ArrayList<Integer> True = aMiddleCode.makelist(aMiddleCode.nextquad());
-        aMiddleCode.genquad("=",leftplace,rightplace,"-");
+        aMiddleCode.genquad("=",leftplace,rightplace,"*");
         ArrayList<Integer> False = aMiddleCode.makelist(aMiddleCode.nextquad());
         aMiddleCode.genquad("jump","-","-","*");
         info_node temp_mi = new info_node("","boolean",null,True,False,false);
@@ -676,7 +729,7 @@ public class PrintingVisitor extends DepthFirstAdapter{
             rightplace = String.format("[%s]",rightm.place);
         }
         ArrayList<Integer> True = aMiddleCode.makelist(aMiddleCode.nextquad());
-        aMiddleCode.genquad("#",leftplace,rightplace,"-");
+        aMiddleCode.genquad("#",leftplace,rightplace,"*");
         ArrayList<Integer> False = aMiddleCode.makelist(aMiddleCode.nextquad());
         aMiddleCode.genquad("jump","-","-","*");
         info_node temp_mi = new info_node("","boolean",null,True,False,false);
@@ -721,7 +774,7 @@ public class PrintingVisitor extends DepthFirstAdapter{
             rightplace = String.format("[%s]",rightm.place);
         }
         ArrayList<Integer> True = aMiddleCode.makelist(aMiddleCode.nextquad());
-        aMiddleCode.genquad(">",leftplace,rightplace,"-");
+        aMiddleCode.genquad(">",leftplace,rightplace,"*");
         ArrayList<Integer> False = aMiddleCode.makelist(aMiddleCode.nextquad());
         aMiddleCode.genquad("jump","-","-","*");
         info_node temp_mi = new info_node("","boolean",null,True,False,false);
@@ -766,7 +819,7 @@ public class PrintingVisitor extends DepthFirstAdapter{
             rightplace = String.format("[%s]",rightm.place);
         }
         ArrayList<Integer> True = aMiddleCode.makelist(aMiddleCode.nextquad());
-        aMiddleCode.genquad("<",leftplace,rightplace,"-");
+        aMiddleCode.genquad("<",leftplace,rightplace,"*");
         ArrayList<Integer> False = aMiddleCode.makelist(aMiddleCode.nextquad());
         aMiddleCode.genquad("jump","-","-","*");
         info_node temp_mi = new info_node("","boolean",null,True,False,false);
@@ -811,7 +864,7 @@ public class PrintingVisitor extends DepthFirstAdapter{
             rightplace = String.format("[%s]",rightm.place);
         }
         ArrayList<Integer> True = aMiddleCode.makelist(aMiddleCode.nextquad());
-        aMiddleCode.genquad("<=",leftplace,rightplace,"-");
+        aMiddleCode.genquad("<=",leftplace,rightplace,"*");
         ArrayList<Integer> False = aMiddleCode.makelist(aMiddleCode.nextquad());
         aMiddleCode.genquad("jump","-","-","*");
         info_node temp_mi = new info_node("","boolean",null,True,False,false);
@@ -856,7 +909,7 @@ public class PrintingVisitor extends DepthFirstAdapter{
             rightplace = String.format("[%s]",rightm.place);
         }
         ArrayList<Integer> True = aMiddleCode.makelist(aMiddleCode.nextquad());
-        aMiddleCode.genquad(">=",leftplace,rightplace,"-");
+        aMiddleCode.genquad(">=",leftplace,rightplace,"*");
         ArrayList<Integer> False = aMiddleCode.makelist(aMiddleCode.nextquad());
         aMiddleCode.genquad("jump","-","-","*");
         info_node temp_mi = new info_node("","boolean",null,True,False,false);
@@ -873,19 +926,122 @@ public class PrintingVisitor extends DepthFirstAdapter{
     }
 
     @Override
-    public void outACondandAndCond(ACondandAndCond node)
+    public void caseACondandAndCond(ACondandAndCond node)
     {
         info_node leftm,rightm;
-        rightm = mi_info_nodes.remove(mi_info_nodes.size()-1);
+        inACondandAndCond(node);
+        if(node.getLeft() != null)
+        {
+            node.getLeft().apply(this);
+        }
         leftm  = mi_info_nodes.remove(mi_info_nodes.size()-1);
         aMiddleCode.backpatch(leftm.True,aMiddleCode.nextquad());
+        if(node.getRight() != null)
+        {
+            node.getRight().apply(this);
+        }
+        rightm = mi_info_nodes.remove(mi_info_nodes.size()-1);
         ArrayList<Integer> True = rightm.True;
         ArrayList<Integer> False = aMiddleCode.merge(leftm.False,rightm.False);
         info_node temp_mi = new info_node("","boolean",null,True,False,false);
         mi_info_nodes.add(temp_mi);
-
+        outACondandAndCond(node);
     }
-     //STMT
+
+    @Override
+    public void caseACondOrCond(ACondOrCond node)
+    {
+        info_node leftm,rightm;
+        inACondOrCond(node);
+        if(node.getLeft() != null)
+        {
+            node.getLeft().apply(this);
+        }
+        leftm  = mi_info_nodes.remove(mi_info_nodes.size()-1);
+        aMiddleCode.backpatch(leftm.False,aMiddleCode.nextquad());
+        if(node.getRight() != null)
+        {
+            node.getRight().apply(this);
+        }
+        rightm = mi_info_nodes.remove(mi_info_nodes.size()-1);
+        ArrayList<Integer> True = aMiddleCode.merge(leftm.True,rightm.True);
+        ArrayList<Integer> False = rightm.False;
+        info_node temp_mi = new info_node("","boolean",null,True,False,false);
+        mi_info_nodes.add(temp_mi);
+        outACondOrCond(node);
+    }
+
+    //STMT IF
+    @Override
+    public void caseAStmtIfStmt(AStmtIfStmt node)
+    {
+        info_node stmt=null,stmt_else=null,cond=null;
+        ArrayList<Integer> L1=null,L2=null;
+        inAStmtIfStmt(node);
+        if(node.getCond() != null)
+        {
+            node.getCond().apply(this);
+            cond=mi_info_nodes.remove(mi_info_nodes.size()-1);
+            aMiddleCode.backpatch(cond.True,aMiddleCode.nextquad());
+            L1 = cond.False;
+            L2 = aMiddleCode.emptylist();
+        }
+        {
+            List<PStmt> copy = new ArrayList<PStmt>(node.getThen());
+            for(PStmt e : copy)
+            {
+                e.apply(this);
+                stmt=mi_info_nodes.remove(mi_info_nodes.size()-1);
+            }
+        }
+        {
+            List<PStmt> copy = new ArrayList<PStmt>(node.getElse());
+            for(PStmt e : copy)
+            {
+                L1 = aMiddleCode.makelist(aMiddleCode.nextquad());
+                aMiddleCode.genquad("jump","-","-","*");
+                aMiddleCode.backpatch(cond.False,aMiddleCode.nextquad());
+                e.apply(this);
+                stmt_else=mi_info_nodes.remove(mi_info_nodes.size()-1);
+                L2 =stmt_else.Next;
+            }
+        }
+        ArrayList <Integer> L = aMiddleCode.merge(aMiddleCode.merge(L1,stmt.Next),L2);
+        info_node temp_mi = new info_node("","stmt",L,null,null,false);
+        mi_info_nodes.add(temp_mi);
+        outAStmtIfStmt(node);
+    }
+
+    @Override
+    public void outAStmtSemiStmt(AStmtSemiStmt node)
+    {
+        info_node temp_mi = new info_node("","stmt",null,null,null,false);
+        mi_info_nodes.add(temp_mi);
+    }
+
+    @Override
+    public void caseAStmtWhileStmt(AStmtWhileStmt node)
+    {
+        info_node stmt=null,cond=null;
+        inAStmtWhileStmt(node);
+        int Q= aMiddleCode.nextquad();
+        if(node.getCond() != null)
+        {
+            node.getCond().apply(this);
+            cond=mi_info_nodes.remove(mi_info_nodes.size()-1);
+            aMiddleCode.backpatch(cond.True,aMiddleCode.nextquad());
+        }
+        if(node.getStmt() != null)
+        {
+            node.getStmt().apply(this);
+            stmt=mi_info_nodes.remove(mi_info_nodes.size()-1);
+            aMiddleCode.backpatch(stmt.Next,Q);
+            aMiddleCode.genquad("jump","-","-",String.format("%d",Q));
+        }
+        info_node temp_mi = new info_node("","stmt",cond.False,null,null,false);
+        mi_info_nodes.add(temp_mi);
+        outAStmtWhileStmt(node);
+    }
 
     @Override
     public void outAStmtLvalueStmt(AStmtLvalueStmt node)
@@ -930,53 +1086,83 @@ public class PrintingVisitor extends DepthFirstAdapter{
     }
 
     @Override
-    public void outAFuncCall(AFuncCall node){
-        SymbolTable.SymbolTableRecord foundSymbol=aSymbolTable.lookup(node.getTId().toString().replaceAll("\\s+",""));
-        String name= node.getTId().toString().replaceAll("\\s+","");
-        if(foundSymbol == null){
-            error = String.format("id \"%s\" is not declared in this scope",node.getTId().toString().replaceAll("\\s+",""));
-            aSymbolTable.print_error(node.getTId().getLine(),node.getTId().getPos(),error);
+    public void caseAFuncCall(AFuncCall node)
+    {
+        inAFuncCall(node);
+        SymbolTable.SymbolTableRecord foundSymbol;
+        if(node.getTId() != null)
+        {
+            node.getTId().apply(this);
         }
-        else{
-            if(!foundSymbol.type.equals( "fun")){
-                error = String.format("id \"%s\" <%s> (%d) is not a functione",node.getTId().toString().replaceAll("\\s+",""),foundSymbol.type,foundSymbol.array_sizes.size());
-                aSymbolTable.print_error(node.getTId().getLine(),node.getTId().getPos(),error);
-            }
-            int number_of_args=0;
-            for(argument e : foundSymbol.arg_types ){
-                number_of_args+=e.ids.size();
-            }
-            if (node.getExpr().size() != number_of_args){
-                error=String.format("function \"%s\" call doesn't match function header (l:%d,p:%d)",name,foundSymbol.line,foundSymbol.pos);
+        {
+            foundSymbol=aSymbolTable.lookup(node.getTId().toString().replaceAll("\\s+",""));
+            String name= node.getTId().toString().replaceAll("\\s+","");
+            if(foundSymbol == null){
+                error = String.format("id \"%s\" is not declared in this scope",node.getTId().toString().replaceAll("\\s+",""));
                 aSymbolTable.print_error(node.getTId().getLine(),node.getTId().getPos(),error);
             }
             else{
-                int number2remove=node.getExpr().size();
-                int pos2remove = type_stack.size() - number2remove;
-                int arg_index = 0,arg_elements=0;
-                argument temp;
-                type_info arg,argf;
-                for(int i=0; i < number2remove ; i++ ){
-                    arg = type_stack.remove(pos2remove);
-                    temp = foundSymbol.arg_types.get(arg_index);
-                    argf = new type_info(0,0,temp.Type,temp.Type,temp.array_sizes.size(),0,false);
-                    if(!equiv(arg,argf)){
-                        error = String.format("expected <%s> (%d) ,found <%s> (%d) in argument (%d) of function \"%s\"",argf.Type,argf.array_max_dim-argf.array_cur_dim,arg.Type,arg.array_max_dim-arg.array_cur_dim,i+1,arg.name);
-                        aSymbolTable.print_error(arg.line,arg.pos,error);
-                    }
-                    arg_elements++;
-                    if(arg_elements == foundSymbol.arg_types.get(arg_index).ids.size()){
-                        arg_elements=0;
-                        arg_index++;
-                    }
+                if(!foundSymbol.type.equals( "fun")){
+                    error = String.format("id \"%s\" <%s> (%d) is not a function",node.getTId().toString().replaceAll("\\s+",""),foundSymbol.type,foundSymbol.array_sizes.size());
+                    aSymbolTable.print_error(node.getTId().getLine(),node.getTId().getPos(),error);
                 }
-                type_info return_type = new type_info(node.getTId().getLine(),node.getTId().getPos(),node.getTId().toString().replaceAll("\\s+",""),foundSymbol.ret_type,0,0,false);
-                type_stack.add(return_type);
+                int number_of_args=0;
+                for(argument e : foundSymbol.arg_types ){
+                    number_of_args+=e.ids.size();
+                }
+                if (node.getExpr().size() != number_of_args){
+                    error=String.format("function \"%s\" call doesn't match function header (l:%d,p:%d)",name,foundSymbol.line,foundSymbol.pos);
+                    aSymbolTable.print_error(node.getTId().getLine(),node.getTId().getPos(),error);
+                }
             }
+            List<PExpr> copy = new ArrayList<PExpr>(node.getExpr());
+            int arg_index = 0,arg_elements=0,i=0;
+            argument temp;
+            type_info arg,argf;
+            for(PExpr e : copy)
+            {
+                e.apply(this);
+                arg = type_stack.remove(type_stack.size()-1);
+                temp = foundSymbol.arg_types.get(arg_index);
+                argf = new type_info(0,0,temp.Type,temp.Type,temp.array_sizes.size(),0,false);
+                if(!equiv(arg,argf)){
+                    error = String.format("expected <%s> (%d) ,found \"%s\" <%s> (%d) in argument (%d) of function \"%s\"",argf.Type,argf.array_max_dim-argf.array_cur_dim,arg.name,arg.Type,arg.array_max_dim-arg.array_cur_dim,i+1,foundSymbol.name);
+                    aSymbolTable.print_error(arg.line,arg.pos,error);
+                }
+                //middlecode start
+                info_node expr;
+                expr= mi_info_nodes.remove(mi_info_nodes.size()-1);
+                if(temp.ref){
+                    aMiddleCode.genquad("par",expr.place,"R","-");
+                }
+                else{
+                    aMiddleCode.genquad("par",expr.place,"V","-");
+                }
+                //middlecode end
+                arg_elements++;
+                if(arg_elements == foundSymbol.arg_types.get(arg_index).ids.size()){
+                    arg_elements=0;
+                    arg_index++;
+                }
+                i++;
+            }
+            type_info return_type = new type_info(node.getTId().getLine(),node.getTId().getPos(),node.getTId().toString().replaceAll("\\s+",""),foundSymbol.ret_type,0,0,false);
+            type_stack.add(return_type);
+            if(!foundSymbol.ret_type.equals("nothing")){
+                W = aMiddleCode.newtemp(foundSymbol.ret_type);
+                aMiddleCode.genquad("par","RET",W,"-");
+                info_node temp_mi = new info_node(W,"stmt",null,null,null,false);
+                mi_info_nodes.add(temp_mi);
+            }
+            else{
+                info_node temp_mi = new info_node("","stmt",null,null,null,false);
+                mi_info_nodes.add(temp_mi);
+            }
+            aMiddleCode.genquad("call","-","-",String.format("%s_%d",foundSymbol.name,foundSymbol.Depth));
         }
+        outAFuncCall(node);
     }
 
-    //return
 
     @Override
     public void outAStmtReturnStmt(AStmtReturnStmt node)
@@ -990,6 +1176,9 @@ public class PrintingVisitor extends DepthFirstAdapter{
                 error = String.format("returning %s (%d) <%s> (%d) in function \"%s\" that has return type <nothing>",expr.name,expr.array_cur_dim,expr.Type,expr.array_max_dim,temp_fun_info.name);
                 aSymbolTable.print_error(expr.line,expr.pos,error);
             }
+            aMiddleCode.genquad("ret","-","-","-");
+            info_node temp_mi = new info_node("","stmt",null,null,null,false);
+            mi_info_nodes.add(temp_mi);
         }
         else{
             if(node.getExpr()!= null){
@@ -1002,8 +1191,63 @@ public class PrintingVisitor extends DepthFirstAdapter{
                     error = String.format("returning %s (%d) <%s> (%d) in function \"%s\" that has return type <char> ",expr.name,expr.array_cur_dim,expr.Type,expr.array_max_dim,temp_fun_info.name);
                     aSymbolTable.print_error(expr.line,expr.pos,error);
                 }
+                info_node expr_m =  mi_info_nodes.remove(mi_info_nodes.size()-1);
+                aMiddleCode.genquad(":=",expr_m.place,"-","RET");
+                aMiddleCode.genquad("ret","-","-","-");
+                info_node temp_mi = new info_node("","stmt",null,null,null,false);
+                mi_info_nodes.add(temp_mi);
             }
         }
+    }
+
+    @Override
+    public void caseAStmtBlockStmt(AStmtBlockStmt node)
+    {
+        ArrayList<Integer> L=aMiddleCode.emptylist();
+        boolean first=true;
+        inAStmtBlockStmt(node);
+        {
+            info_node a_stmt;
+            List<PStmt> copy = new ArrayList<PStmt>(node.getStmt());
+            for(PStmt e : copy)
+            {
+                if(!first){
+                    aMiddleCode.backpatch(L,aMiddleCode.nextquad());
+                }
+                e.apply(this);
+                first=false;
+                a_stmt=mi_info_nodes.remove(mi_info_nodes.size()-1);
+                L = a_stmt.Next;
+            }
+            info_node temp_mi = new info_node("","block",L,null,null,false);
+            mi_info_nodes.add(temp_mi);
+        }
+        outAStmtBlockStmt(node);
+    }
+
+    @Override
+    public void caseAFuncDefBlock(AFuncDefBlock node)
+    {
+        ArrayList<Integer> L=aMiddleCode.emptylist();
+        boolean first=true;
+        inAFuncDefBlock(node);
+        {
+            info_node a_stmt;
+            List<PStmt> copy = new ArrayList<PStmt>(node.getStmt());
+            for(PStmt e : copy)
+            {
+                if(!first){
+                    aMiddleCode.backpatch(L,aMiddleCode.nextquad());
+                }
+                e.apply(this);
+                first=false;
+                a_stmt=mi_info_nodes.remove(mi_info_nodes.size()-1);
+                L = a_stmt.Next;
+            }
+            info_node temp_mi = new info_node("","block",L,null,null,false);
+            mi_info_nodes.add(temp_mi);
+        }
+        outAFuncDefBlock(node);
     }
 
 }
