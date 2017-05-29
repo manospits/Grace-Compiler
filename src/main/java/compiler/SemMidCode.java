@@ -4,7 +4,7 @@ import compiler.node.*;
 import java.io.*;
 import java.util.*;
 
-public class PrintingVisitor extends DepthFirstAdapter{
+public class SemMidCode extends DepthFirstAdapter{
     int spaces=0;
     SymbolTable aSymbolTable = new SymbolTable();
     ArrayList<argument> temp_args;
@@ -36,6 +36,7 @@ public class PrintingVisitor extends DepthFirstAdapter{
             this.type=type;
         }
     }
+
     String error;
     type_info int_type  = new type_info(0,0,"int","int",0,0,false);
     type_info char_type = new type_info(0,0,"char","char",0,0,false);
@@ -48,6 +49,8 @@ public class PrintingVisitor extends DepthFirstAdapter{
     //MIDDLE CODE
     ArrayList<info_node> mi_info_nodes = new ArrayList<info_node>();
     String W;
+
+    boolean return_check=false;
 
     private boolean check_both(String a,String b, String c1,String c2){
         if((a.equals(c1) && b.equals(c2)) || (b.equals(c1) && a.equals(c2) )){
@@ -78,6 +81,22 @@ public class PrintingVisitor extends DepthFirstAdapter{
             //}
         }
         return false;
+    }
+
+    public static boolean isInteger(String s) {
+        return isInteger(s,10);
+    }
+
+    public static boolean isInteger(String s, int radix) {
+        if(s.isEmpty()) return false;
+        for(int i = 0; i < s.length(); i++) {
+            if(i == 0 && s.charAt(i) == '-') {
+                if(s.length() == 1) return false;
+                    else continue;
+            }
+            if(Character.digit(s.charAt(i),radix) < 0) return false;
+        }
+        return true;
     }
 
     @Override
@@ -232,6 +251,14 @@ public class PrintingVisitor extends DepthFirstAdapter{
 
     @Override
     public void outAFuncDef(AFuncDef node){
+        SymbolTable.SymbolTableRecord foundSymbol=aSymbolTable.lookup(node.getTId().toString().replaceAll("\\s+",""));
+        if(!foundSymbol.ret_type.equals("nothing")){
+            if(!return_check){
+                error = String.format("nothing returned in function %s with return type <%s>",foundSymbol.name,foundSymbol.ret_type);
+                aSymbolTable.print_error(foundSymbol.line,foundSymbol.pos,error);
+            }
+        }
+        return_check=false;
         function_stack.remove(function_stack.size()-1);
         aSymbolTable.exit();
     }
@@ -510,7 +537,7 @@ public class PrintingVisitor extends DepthFirstAdapter{
     @Override
     public void outAInplusExpr(AInplusExpr node)
     {
-        type_info left,right,temp;
+        type_info right,temp;
         right = type_stack.remove(type_stack.size()-1);
         if(!equiv(right,int_type)){
             error = String.format("%s (%d) <%s> (%d) is not accepted in \"+\" (infix) operation",right.name,right.array_cur_dim,right.Type,right.array_max_dim);
@@ -578,6 +605,13 @@ public class PrintingVisitor extends DepthFirstAdapter{
                 error = String.format("%s <%s> is not accepted in array index (%d)",array_index.name,array_index.Type,i+1);
                 aSymbolTable.print_error(array_index.line,array_index.pos,error);
             }
+            if(array_index.Type.equals("int_const") && isInteger(array_index.name)){
+                int value=Integer.parseInt(array_index.name);
+                if(aSymbol.array_sizes.get(i)!= -1 && value >= aSymbol.array_sizes.get(i)){
+                    error = String.format("accessing dimension (%d) with index (%d) bigger than array size (%d) ",dims,value,aSymbol.array_sizes.get(i));
+                    aSymbolTable.print_error(array_index.line,array_index.pos,error);
+                }
+            }
         }
         if(aSymbol!= null){
             type_info temp = new type_info(node.getTId().getLine(),node.getTId().getPos(),node.getTId().toString().replaceAll("\\s+",""),aSymbol.type,aSymbol.array_sizes.size(),dims,false);
@@ -640,12 +674,20 @@ public class PrintingVisitor extends DepthFirstAdapter{
             aSymbolTable.print_error(node.getTString().getLine(),node.getTString().getPos(),error);
         }
         info_node index;
+        int size=node.getTString().toString().replaceAll("\\s+","").length()+1;
         if(dims!=0){
             for(int i=0; i < dims ; i++ ){
                 array_index=type_stack.remove(pos2remove);
                 if(!equiv(array_index,int_type)){
                     error = String.format("%s <%s> is not accepted in array index (%d)",array_index.name,array_index.Type,i+1);
                     aSymbolTable.print_error(array_index.line,array_index.pos,error);
+                }
+                if(array_index.Type.equals("int_const") && isInteger(array_index.name)){
+                    int value=Integer.parseInt(array_index.name);
+                    if(value >= size){
+                        error = String.format("accessing dimension (%d) with index (%d) bigger than array size (%d) ",dims,value,size);
+                        aSymbolTable.print_error(array_index.line,array_index.pos,error);
+                    }
                 }
                 index = mi_info_nodes.remove(pos2remove_m);
                 W = aMiddleCode.newtemp("int");
@@ -1168,7 +1210,7 @@ public class PrintingVisitor extends DepthFirstAdapter{
             type_stack.add(return_type);
             if(!foundSymbol.ret_type.equals("nothing")){
                 W = aMiddleCode.newtemp(foundSymbol.ret_type);
-                aMiddleCode.genquad("par","RET",W,"-");
+                aMiddleCode.genquad("par",W,"RET","-");
                 info_node temp_mi = new info_node(W,"stmt",null,null,null,false);
                 mi_info_nodes.add(temp_mi);
             }
@@ -1209,11 +1251,16 @@ public class PrintingVisitor extends DepthFirstAdapter{
                     error = String.format("returning %s (%d) <%s> (%d) in function \"%s\" that has return type <char> ",expr.name,expr.array_cur_dim,expr.Type,expr.array_max_dim,temp_fun_info.name);
                     aSymbolTable.print_error(expr.line,expr.pos,error);
                 }
+                return_check=true;
                 info_node expr_m =  mi_info_nodes.remove(mi_info_nodes.size()-1);
-                aMiddleCode.genquad(":=",expr_m.place,"-","RET");
+                aMiddleCode.genquad(":=",expr_m.place,"-","$$");
                 aMiddleCode.genquad("ret","-","-","-");
                 info_node temp_mi = new info_node("","stmt",null,null,null,false);
                 mi_info_nodes.add(temp_mi);
+            }
+            else{
+                error = String.format("return statement returning nothing found in function \"%s\" that has return type <%s> ",temp_fun_info.name,temp_fun_info.type);
+                aSymbolTable.print_error(node.getTReturn().getLine(),node.getTReturn().getPos(),error);
             }
         }
     }

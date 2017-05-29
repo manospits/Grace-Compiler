@@ -20,7 +20,7 @@ class Main{
             try{
                 Start tree = p.parse();
                 //System.out.println(tree.toString());
-                tree.apply(new PrintingVisitor());
+                tree.apply(new SemMidCode());
               }
             catch(Exception e){
                 e.printStackTrace();

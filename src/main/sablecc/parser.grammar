@@ -140,7 +140,7 @@ Productions
             {stmt_block} block                         {-> New stmt.stmt_block([block.stmt])}   |
             {stmt_func_call} func_call t_semi          {-> New stmt.stmt_func_call(func_call)}  |
             {stmt_if} if                               {-> if.stmt}                             |
-            {stmt_return} t_return expr? t_semi        {-> New stmt.stmt_return(expr)}          |
+            {stmt_return} t_return expr? t_semi        {-> New stmt.stmt_return(t_return,expr)} | //not removing return token to find error line 
             {stmt_while} while {-> while.stmt };
 
     while {-> stmt} = t_while cond t_do stmt {-> New stmt.stmt_while(cond,stmt)};
@@ -157,7 +157,7 @@ Productions
             {stmt_else_lvalue} l_value t_larrow expr t_semi {-> New stmt.stmt_lvalue(l_value,expr)} |
             {stmt_else_block} block                         {-> New stmt.stmt_block([block.stmt])}  |
             {stmt_else_func_call} func_call t_semi          {-> New stmt.stmt_func_call(func_call)} |
-            {stmt_else_return} t_return expr? t_semi        {-> New stmt.stmt_return(expr)}         |
+            {stmt_else_return} t_return expr? t_semi        {-> New stmt.stmt_return(t_return,expr)}| //not removing return token to find error line 
             {stmt_else_if} if_else                          {-> if_else.stmt}|
             {stmt_else_while} while_else {-> while_else.stmt};
 
@@ -269,7 +269,7 @@ Abstract Syntax Tree
     {stmt_block} stmt*                            |
     {stmt_func_call} func_call                    |
     {stmt_if} cond [then]:stmt* [else]:stmt*      |
-    {stmt_return} expr?                           |
+    {stmt_return} t_return expr?                  |
     {stmt_while} cond stmt;
 
 

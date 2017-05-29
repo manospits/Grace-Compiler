@@ -198,6 +198,8 @@ public class SymbolTable {
         ArrayList<argument> args = new ArrayList<argument>();
         ArrayList<String> ids = new ArrayList<String>();
         ArrayList<Integer> b_array_sizes=new ArrayList<Integer>();
+
+        //io
         ids.add("n");
         argument puti_arg = new argument("int",ids,b_array_sizes,false);
         args.add(puti_arg);
@@ -229,6 +231,45 @@ public class SymbolTable {
         argument gets_arg2 = new argument("char",ids,b_array_sizes,true);
         args.add(gets_arg2);
         this.insert(0,0,"gets","fun","char",false,null,args,true,false);
+
+        //string
+        args.clear();
+        ids.clear();
+        args.clear();
+        b_array_sizes.clear();
+        ids.add("s");
+        b_array_sizes.add(-1);
+        argument str_arg = new argument("char",ids,b_array_sizes,true);
+        args.add(str_arg);
+        this.insert(0,0,"strlen","fun","int",false,null,args,true,false);
+        ids.clear();
+        ids.add("s1");
+        ids.add("s2");
+        this.insert(0,0,"strcmp","fun","int",false,null,args,true,false);
+        ids.clear();
+        ids.add("trg");
+        ids.add("src");
+        this.insert(0,0,"strcpy","fun","nothing",false,null,args,true,false);
+        this.insert(0,0,"strcat","fun","nothing",false,null,args,true,false);
+
+        //math
+        args.clear();
+        ids.clear();
+        b_array_sizes.clear();
+        ids.add("n");
+        argument math_arg = new argument("int",ids,b_array_sizes,false);
+        args.add(math_arg);
+        this.insert(0,0,"abs","fun","int",false,null,args,true,false);
+        this.insert(0,0,"chr","fun","char",false,null,args,true,false);
+        ids.clear();
+        ids.add("c");
+        argument mathc_arg = new argument("char",ids,b_array_sizes,false);
+        args.add(mathc_arg);
+        this.insert(0,0,"ord","fun","int",false,null,args,true,false);
+
+
+
+
     }
 
     public SymbolTableRecord lookup(String name){
