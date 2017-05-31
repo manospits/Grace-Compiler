@@ -31,9 +31,13 @@ public class SemMidCode extends DepthFirstAdapter{
     class fun_name_type{
         String name;
         String type;
-        fun_name_type(String name,String type){
+        int line;
+        int pos;
+        fun_name_type(String name,String type,int line,int pos){
             this.name=name;
             this.type=type;
+            this.line=line;
+            this.pos=pos;
         }
     }
 
@@ -51,6 +55,7 @@ public class SemMidCode extends DepthFirstAdapter{
     String W;
 
     boolean return_check=false;
+    boolean first_func_def=true;
 
     private boolean check_both(String a,String b, String c1,String c2){
         if((a.equals(c1) && b.equals(c2)) || (b.equals(c1) && a.equals(c2) )){
@@ -116,12 +121,22 @@ public class SemMidCode extends DepthFirstAdapter{
         String Type;
         String ret_type;
         ArrayList<argument> temp_args = new ArrayList<argument>();
-        int error;
         Type = "fun";
         fun_name = node.getTId().toString().replaceAll("\\s+","");
         ret_type = node.getRetType().toString().replaceAll("\\s+","");
         AFparDef node_f;
         List<PFparDef> copy = new ArrayList<PFparDef>(node.getFparDef());
+        if(first_func_def == true){
+                if(copy.size()!=0){
+                    error = String.format("function %s can't have arguments",node.getTId().toString().replaceAll("\\s+",""));
+                    aSymbolTable.print_error(node.getTId().getLine(),node.getTId().getPos(),error);
+                }
+                if(!node.getRetType().toString().replaceAll("\\s+","").equals("nothing")){
+                    error = String.format("function %s can't have returning argument",node.getTId().toString().replaceAll("\\s+",""));
+                    aSymbolTable.print_error(node.getTId().getLine(),node.getTId().getPos(),error);
+                }
+        }
+        first_func_def=false;
         for(PFparDef e : copy)
         {
             node_f = (AFparDef) e;
@@ -157,12 +172,9 @@ public class SemMidCode extends DepthFirstAdapter{
             arg = new argument(TypeOfArg,ids,array_sizes,ref);
             temp_args.add(arg);
         }
-        error = aSymbolTable.insert(node.getTId().getLine(),node.getTId().getPos(),fun_name,Type,ret_type,false,null,temp_args,true,false);
-        fun_name_type temp_fun_info= new fun_name_type(fun_name,ret_type);
+        aSymbolTable.insert(node.getTId().getLine(),node.getTId().getPos(),fun_name,Type,ret_type,false,null,temp_args,true,false);
+        fun_name_type temp_fun_info= new fun_name_type(fun_name,ret_type,node.getTId().getLine(),node.getTId().getPos());
         function_stack.add(temp_fun_info);
-        if(error==1){
-            //System.out.printf("Error (%d,%d) : \"%s\" < %s > has been redefined\n",node.getTId().getLine(),node.getTId().getPos(),fun_name,Type);
-        }
         aSymbolTable.enter();
         for(PFparDef e : copy)
         {
@@ -192,10 +204,7 @@ public class SemMidCode extends DepthFirstAdapter{
             ids = new ArrayList<String>();
             List<TTId> id_copy = new ArrayList<TTId>(node_f.getTId());
             for(TTId id_e : id_copy){
-                error=aSymbolTable.insert(id_e.getLine(),id_e.getPos(),id_e.toString().replaceAll("\\s+",""),TypeOfArg,"no",ref,array_sizes,null,false,true);
-                if(error==1){
-                    //System.out.printf("Error (%d,%d) : \"%s\" < %s > has been redefined\n",id_e.getLine(),id_e.getPos(),id_e.toString().replaceAll("\\s+",""),Type);
-                }
+                aSymbolTable.insert(id_e.getLine(),id_e.getPos(),id_e.toString().replaceAll("\\s+",""),TypeOfArg,"no",ref,array_sizes,null,false,true);
             }
         }
     }
@@ -208,6 +217,8 @@ public class SemMidCode extends DepthFirstAdapter{
         {
             node.getTId().apply(this);
         }
+        //symbol must be found before visiting local definitions in case of shadowing
+        SymbolTable.SymbolTableRecord foundSymbol=aSymbolTable.lookup(node.getTId().toString().replaceAll("\\s+",""));
         {
             List<PFparDef> copy = new ArrayList<PFparDef>(node.getFparDef());
             for(PFparDef e : copy)
@@ -227,9 +238,7 @@ public class SemMidCode extends DepthFirstAdapter{
             }
         }
         {
-            SymbolTable.SymbolTableRecord foundSymbol=aSymbolTable.lookup(node.getTId().toString().replaceAll("\\s+",""));
             aMiddleCode.genquad("unit",String.format("%s_%d",foundSymbol.name,foundSymbol.Depth),"-","-");
-
             ArrayList<Integer> L=aMiddleCode.emptylist();
             List<PStmt> copy = new ArrayList<PStmt>(node.getStmt());
             info_node a_stmt;
@@ -242,20 +251,18 @@ public class SemMidCode extends DepthFirstAdapter{
             }
             info_node temp_mi = new info_node("","block",L,null,null,false);
             mi_info_nodes.add(temp_mi);
-
             aMiddleCode.genquad("endu",String.format("%s_%d",foundSymbol.name,foundSymbol.Depth),"-","-");
         }
-
         outAFuncDef(node);
     }
 
     @Override
     public void outAFuncDef(AFuncDef node){
-        SymbolTable.SymbolTableRecord foundSymbol=aSymbolTable.lookup(node.getTId().toString().replaceAll("\\s+",""));
-        if(!foundSymbol.ret_type.equals("nothing")){
+        fun_name_type tempf=function_stack.get(function_stack.size()-1);
+        if(!tempf.type.equals("nothing")){
             if(!return_check){
-                error = String.format("nothing returned in function %s with return type <%s>",foundSymbol.name,foundSymbol.ret_type);
-                aSymbolTable.print_error(foundSymbol.line,foundSymbol.pos,error);
+                error = String.format("nothing returned in function %s with return type <%s>",tempf.name,tempf.type);
+                aSymbolTable.print_error(tempf.line,tempf.pos,error);
             }
         }
         return_check=false;
@@ -316,10 +323,6 @@ public class SemMidCode extends DepthFirstAdapter{
         if(error==1){
             //System.out.printf("Error (%d,%d) : \"%s\" < %s > has been redefined\n",node.getTId().getLine(),node.getTId().getPos(),fun_name,Type);
         }
-    }
-
-    @Override
-    public void outAFuncDecl(AFuncDecl node){
     }
 
     //var-def
@@ -552,7 +555,7 @@ public class SemMidCode extends DepthFirstAdapter{
             rightplace = String.format("[%s]",rightm.place);
         }
         W = aMiddleCode.newtemp("int");
-        aMiddleCode.genquad("+",rightplace,"-",W);
+        aMiddleCode.genquad("+","0",rightplace,W);
         info_node temp_mi = new info_node(W,"int",null,null,null,false);
         mi_info_nodes.add(temp_mi);
     }
@@ -575,7 +578,7 @@ public class SemMidCode extends DepthFirstAdapter{
             rightplace = String.format("[%s]",rightm.place);
         }
         W = aMiddleCode.newtemp("int");
-        aMiddleCode.genquad("-",rightplace,"-",W);
+        aMiddleCode.genquad("-","0",rightplace,W);
         info_node temp_mi = new info_node(W,"int",null,null,null,false);
         mi_info_nodes.add(temp_mi);
     }
@@ -597,7 +600,7 @@ public class SemMidCode extends DepthFirstAdapter{
                 error = String.format("accessing dimension (%d) when id \"%s\" has (%d) ",dims,node.getTId().toString().replaceAll("\\s+",""),aSymbol.array_sizes.size());
                 aSymbolTable.print_error(node.getTId().getLine(),node.getTId().getPos(),error);
             }
-        //TODO TYPE check
+        //DONE TYPE check
         }
         for(int i=0; i < dims ; i++ ){
             array_index=type_stack.remove(pos2remove);
@@ -617,6 +620,7 @@ public class SemMidCode extends DepthFirstAdapter{
             type_info temp = new type_info(node.getTId().getLine(),node.getTId().getPos(),node.getTId().toString().replaceAll("\\s+",""),aSymbol.type,aSymbol.array_sizes.size(),dims,false);
             type_stack.add(temp);
             info_node temp_mi;
+            String place;
             if(dims==0){
                 if(aSymbol.type.equals("char_const"))
                     temp_mi = new info_node(node.getTId().toString().replaceAll("\\s+",""),"char",null,null,null,false);
@@ -638,7 +642,11 @@ public class SemMidCode extends DepthFirstAdapter{
                         for(int j=i+2;j<dims;j++){
                             width*=aSymbol.array_sizes.get(j);
                         }
-                        aMiddleCode.genquad("*",String.format("%d",width),index.place,W);
+                        place=index.place;
+                        if(index.array){
+                            place=String.format("[%s]",index.place);
+                        }
+                        aMiddleCode.genquad("*",String.format("%d",width),place,W);
                         if(i!=0)
                             aMiddleCode.genquad("+",tW,W,tW);
                         else
@@ -651,7 +659,11 @@ public class SemMidCode extends DepthFirstAdapter{
                 }
                 else{
                     index = mi_info_nodes.remove(pos2remove_m);
-                    tW=index.place;
+                    place=index.place;
+                    if(index.array){
+                        place=String.format("[%s]",index.place);
+                    }
+                    tW=place;
                 }
                 W = aMiddleCode.newtemp("int");
                 aMiddleCode.genquad("array",node.getTId().toString().replaceAll("\\s+",""),tW,W);
@@ -669,6 +681,7 @@ public class SemMidCode extends DepthFirstAdapter{
         int pos2remove_m = mi_info_nodes.size() - dims;
         type_info array_index;
         info_node temp_mi;
+        String place;
         if(string_dim<dims){
             error = String.format("accessing dimension (%d) when string \"%s\" has (%d) ",dims,node.getTString().toString().replaceAll("\\s+",""),string_dim);
             aSymbolTable.print_error(node.getTString().getLine(),node.getTString().getPos(),error);
@@ -691,7 +704,11 @@ public class SemMidCode extends DepthFirstAdapter{
                 }
                 index = mi_info_nodes.remove(pos2remove_m);
                 W = aMiddleCode.newtemp("int");
-                aMiddleCode.genquad("array",node.getTString().toString().replaceAll("\\s+",""),index.place,W);
+                place=index.place;
+                if(index.array){
+                    place=String.format("[%s]",index.place);
+                }
+                aMiddleCode.genquad("array",node.getTString().toString().replaceAll("\\s+",""),place,W);
                 temp_mi = new info_node(W,"char",null,null,null,true);
                 mi_info_nodes.add(temp_mi);
             }
@@ -1192,11 +1209,15 @@ public class SemMidCode extends DepthFirstAdapter{
                 //middlecode start
                 info_node expr;
                 expr= mi_info_nodes.remove(mi_info_nodes.size()-1);
+                String place=expr.place;
+                if(expr.array){
+                    place=String.format("[%s]",expr.place);
+                }
                 if(temp.ref){
-                    aMiddleCode.genquad("par",expr.place,"R","-");
+                    aMiddleCode.genquad("par",place,"R","-");
                 }
                 else{
-                    aMiddleCode.genquad("par",expr.place,"V","-");
+                    aMiddleCode.genquad("par",place,"V","-");
                 }
                 //middlecode end
                 arg_elements++;
@@ -1230,6 +1251,7 @@ public class SemMidCode extends DepthFirstAdapter{
         type_info expr;
         fun_name_type temp_fun_info;
         temp_fun_info= function_stack.get(function_stack.size()-1);
+        String place;
         if(temp_fun_info.type.equals("nothing")){
             if(node.getExpr()!= null){
                 expr = type_stack.remove(type_stack.size()-1);
@@ -1252,8 +1274,13 @@ public class SemMidCode extends DepthFirstAdapter{
                     aSymbolTable.print_error(expr.line,expr.pos,error);
                 }
                 return_check=true;
+                System.out.printf("function %s\n",temp_fun_info.name);
                 info_node expr_m =  mi_info_nodes.remove(mi_info_nodes.size()-1);
-                aMiddleCode.genquad(":=",expr_m.place,"-","$$");
+                place=expr_m.place;
+                if(expr_m.array){
+                    place=String.format("[%s]",expr_m.place);
+                }
+                aMiddleCode.genquad(":=",place,"-","$$");
                 aMiddleCode.genquad("ret","-","-","-");
                 info_node temp_mi = new info_node("","stmt",null,null,null,false);
                 mi_info_nodes.add(temp_mi);

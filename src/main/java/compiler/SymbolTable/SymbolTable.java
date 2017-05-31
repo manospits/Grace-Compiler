@@ -174,18 +174,18 @@ public class SymbolTable {
                     return 1;
                 }
             }
-            else{
-                if(foundSymbol.type.equals("fun")){
-                    error =String.format("overshadowing \"%s\" <%s> (l:%d,p:%d) with \"%s\" <%s> is not permitted",foundSymbol.name,foundSymbol.type,foundSymbol.line,foundSymbol.pos,name,type);
-                    print_error(line,pos,error);
-                    return 1;
-                }
-                else if(type.equals("fun")){
-                    error =String.format("overshadowing \"%s\" <%s> (l:%d,p:%d) with \"%s\" <%s> is not permitted",foundSymbol.name,foundSymbol.type,foundSymbol.line,foundSymbol.pos,name,type);
-                    print_error(line,pos,error);
-                    return 1;
-                }
-            }
+            //else{ //shadowing is permitted so the code below isn't needed
+                //if(foundSymbol.type.equals("fun")){
+                    //error =String.format("shadowing \"%s\" <%s> (l:%d,p:%d) with \"%s\" <%s> is not permitted",foundSymbol.name,foundSymbol.type,foundSymbol.line,foundSymbol.pos,name,type);
+                    //print_error(line,pos,error);
+                    //return 1;
+                //}
+                //else if(type.equals("fun")){
+                    //error =String.format("shadowing \"%s\" <%s> (l:%d,p:%d) with \"%s\" <%s> is not permitted",foundSymbol.name,foundSymbol.type,foundSymbol.line,foundSymbol.pos,name,type);
+                    //print_error(line,pos,error);
+                    //return 1;
+                //}
+            //}
         }
         //new record in symbol table
         symbol_hash.put(name,symbols.size());
