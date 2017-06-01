@@ -1,7 +1,13 @@
+function prime
+function prime
+function prime
+function prime
+function prime
+function prime
 0:	unit,prime_1,-,-
 1:	<,n,0,3
 2:	jump,-,-,10
-3:	-,1,-,$0
+3:	-,0,1,$0
 4:	par,$0,V,-
 5:	par,$1,RET,-
 6:	call,-,-,prime_1

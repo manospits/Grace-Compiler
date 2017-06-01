@@ -714,7 +714,7 @@ public class SemMidCode extends DepthFirstAdapter{
             }
         }
         else{
-            temp_mi = new info_node(node.getTString().toString().replaceAll("\\s+",""),"char",null,null,null,true);
+            temp_mi = new info_node(node.getTString().toString().replaceAll("\\s+",""),"char",null,null,null,false);
             mi_info_nodes.add(temp_mi);
         }
         type_info temp = new type_info(node.getTString().getLine(),node.getTString().getPos(),node.getTString().toString().replaceAll("\\s+",""),"char",string_dim,dims,true);
