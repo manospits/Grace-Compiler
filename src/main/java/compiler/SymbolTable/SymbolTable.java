@@ -242,13 +242,19 @@ public class SymbolTable {
         argument str_arg = new argument("char",ids,b_array_sizes,true);
         args.add(str_arg);
         this.insert(0,0,"strlen","fun","int",false,null,args,true,false);
+        args.clear();
         ids.clear();
         ids.add("s1");
         ids.add("s2");
+        str_arg = new argument("char",ids,b_array_sizes,true);
+        args.add(str_arg);
         this.insert(0,0,"strcmp","fun","int",false,null,args,true,false);
+        args.clear();
         ids.clear();
         ids.add("trg");
         ids.add("src");
+        str_arg = new argument("char",ids,b_array_sizes,true);
+        args.add(str_arg);
         this.insert(0,0,"strcpy","fun","nothing",false,null,args,true,false);
         this.insert(0,0,"strcat","fun","nothing",false,null,args,true,false);
 
@@ -261,6 +267,7 @@ public class SymbolTable {
         args.add(math_arg);
         this.insert(0,0,"abs","fun","int",false,null,args,true,false);
         this.insert(0,0,"chr","fun","char",false,null,args,true,false);
+        args.clear();
         ids.clear();
         ids.add("c");
         argument mathc_arg = new argument("char",ids,b_array_sizes,false);
