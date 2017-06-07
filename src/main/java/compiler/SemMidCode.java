@@ -319,10 +319,7 @@ public class SemMidCode extends DepthFirstAdapter{
             temp_args.add(arg);
         }
         int error;
-        error=aSymbolTable.insert(node.getTId().getLine(),node.getTId().getPos(),fun_name,Type,ret_type,false,null,temp_args,false,false);
-        if(error==1){
-            //System.out.printf("Error (%d,%d) : \"%s\" < %s > has been redefined\n",node.getTId().getLine(),node.getTId().getPos(),fun_name,Type);
-        }
+        aSymbolTable.insert(node.getTId().getLine(),node.getTId().getPos(),fun_name,Type,ret_type,false,null,temp_args,false,false);
     }
 
     //var-def
@@ -1274,7 +1271,7 @@ public class SemMidCode extends DepthFirstAdapter{
                     aSymbolTable.print_error(expr.line,expr.pos,error);
                 }
                 return_check=true;
-                System.out.printf("function %s\n",temp_fun_info.name);
+                //System.out.printf("function %s\n",temp_fun_info.name);
                 info_node expr_m =  mi_info_nodes.remove(mi_info_nodes.size()-1);
                 place=expr_m.place;
                 if(expr_m.array){
