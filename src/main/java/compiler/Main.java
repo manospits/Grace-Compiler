@@ -6,9 +6,15 @@ import compiler.node.*;
 import java.io.*;
 
 class Main{
+    public static String filename;
+    public static String stripGrace(String a){
+        a=a.substring(0,a.length()-6);
+        return a;
+    }
     public static void main(String[] arguments){
         try{
             File initialFile = new File(arguments[0]);
+            filename=stripGrace(arguments[0]);
             InputStream progr = new FileInputStream(initialFile);
             Parser p =
                 new Parser(

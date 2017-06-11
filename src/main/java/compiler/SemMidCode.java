@@ -3,6 +3,7 @@ import compiler.analysis.DepthFirstAdapter;
 import compiler.node.*;
 import java.io.*;
 import java.util.*;
+import java.util.regex.*;
 
 public class SemMidCode extends DepthFirstAdapter{
     int spaces=0;
@@ -10,6 +11,9 @@ public class SemMidCode extends DepthFirstAdapter{
     ArrayList<argument> temp_args;
     middlecode aMiddleCode = new middlecode();
     assembly aAssembly = new assembly();
+    String error,function_name;
+    int string_dim=1;
+    Pattern p = Pattern.compile("[a-zA-Z_]_(\\d+)$"); //used for getting depth from a function name
 
     class type_info{
         int line,pos;
@@ -29,6 +33,10 @@ public class SemMidCode extends DepthFirstAdapter{
         }
     }
 
+    type_info int_type  = new type_info(0,0,"int","int",0,0,false);
+    type_info char_type = new type_info(0,0,"char","char",0,0,false);
+    type_info bool_type = new type_info(0,0,"bool","bool",0,0,false);
+
     class fun_name_type{
         String name;
         String type;
@@ -42,12 +50,6 @@ public class SemMidCode extends DepthFirstAdapter{
         }
     }
 
-    String error;
-    type_info int_type  = new type_info(0,0,"int","int",0,0,false);
-    type_info char_type = new type_info(0,0,"char","char",0,0,false);
-    type_info bool_type = new type_info(0,0,"bool","bool",0,0,false);
-
-    int string_dim=1;
     ArrayList<type_info> type_stack = new ArrayList<type_info>();
     ArrayList<fun_name_type> function_stack = new ArrayList<fun_name_type>();
 
@@ -93,6 +95,12 @@ public class SemMidCode extends DepthFirstAdapter{
         return isInteger(s,10);
     }
 
+    public int next_4(int n){
+        int a=n&3;
+        if(a==0) return n;
+        return n+(4-a);
+    }
+
     public static boolean isInteger(String s, int radix) {
         if(s.isEmpty()) return false;
         for(int i = 0; i < s.length(); i++) {
@@ -105,24 +113,26 @@ public class SemMidCode extends DepthFirstAdapter{
         return true;
     }
 
+    public int get_depth_fname(String fun){
+        Matcher m = p.matcher(fun);
+        m.find();
+        String num=m.group(1);
+        //System.out.printf("%s\n",num);
+        return Integer.parseInt(num);
+    }
+
     //PROGRAM IN
     @Override
     public void inAProgram(AProgram node){
         aSymbolTable.add_basic_functions();
-        aAssembly.add_comm("main:","","",false);
-        aAssembly.add_comm("push","ebp","",true);
-        aAssembly.add_comm("mov","ebp","esp",true);
     }
 
     //PROGRAM OUT
     @Override
     public void outAProgram(AProgram node){
-        //aMiddleCode.print_quads();
-        aAssembly.add_comm("mov","eax","0",true);
-        aAssembly.add_comm("mov","esp","ebp",true);
-        aAssembly.add_comm("pop","ebp","",true);
-        aAssembly.add_comm("ret","","",true);
-        aAssembly.print_comms();
+        aMiddleCode.print_quads();
+        //aAssembly.print_comms();
+        aAssembly.create_assembly_file(String.format("%s.s",Main.filename));
     }
 
     //FUNC DEF IN
@@ -146,7 +156,6 @@ public class SemMidCode extends DepthFirstAdapter{
                 error = String.format("function %s can't have returning argument",node.getTId().toString().replaceAll("\\s+",""));
                 aSymbolTable.print_error(node.getTId().getLine(),node.getTId().getPos(),error);
             }
-            aAssembly.add_comm("call",String.format("%s_0",fun_name),"",true);
         }
         first_func_def=false;
         for(PFparDef e : copy)
@@ -253,6 +262,7 @@ public class SemMidCode extends DepthFirstAdapter{
         {
             int from_tempv,to_tempv;
             aMiddleCode.genquad("unit",String.format("%s_%d",foundSymbol.name,foundSymbol.Depth),"-","-");
+            aMiddleCode.set_start_address(aSymbolTable.get_last_depth_local_address());
             from_tempv=aMiddleCode.get_var_index();
             ArrayList<Integer> L=aMiddleCode.emptylist();
             List<PStmt> copy = new ArrayList<PStmt>(node.getStmt());
@@ -270,6 +280,7 @@ public class SemMidCode extends DepthFirstAdapter{
             aMiddleCode.genquad("endu",String.format("%s_%d",foundSymbol.name,foundSymbol.Depth),"-","-");
             aMiddleCode.add_range(String.format("%s_%d",foundSymbol.name,foundSymbol.Depth),from_tempv,to_tempv);
         }
+        function_name=String.format("%s_%d",foundSymbol.name,foundSymbol.Depth);
         outAFuncDef(node);
     }
 
@@ -285,6 +296,64 @@ public class SemMidCode extends DepthFirstAdapter{
         }
         return_check=false;
         function_stack.remove(function_stack.size()-1);
+        //middlecode to assembly
+        String m_op;
+        int from,to=aMiddleCode.nextquad();
+        from=aMiddleCode.last_unit_pos(to);
+        if(from==0){
+            aAssembly.add_comm(".intel_syntax","noprefix","",false);
+            aAssembly.add_comm(".text","","",false);
+            aAssembly.add_comm(".global","main","",true);
+            aAssembly.add_comm("main:","","",false);
+            aAssembly.add_comm("push","ebp","",true);
+            aAssembly.add_comm("mov","ebp","esp",true);
+            aAssembly.add_comm("call",function_name,"",true);
+            aAssembly.add_comm("mov","eax","0",true);
+            aAssembly.add_comm("mov","esp","ebp",true);
+            aAssembly.add_comm("pop","ebp","",true);
+            aAssembly.add_comm("ret","","",true);
+        }
+        middlecode.quad aQuad;
+        int size,cur_depth=0,call_depth;
+        size=aMiddleCode.get_start_address();
+        size=next_4(size);
+        String name="";
+        boolean ret=false;
+        for(int i=from;i<to;i++){
+            aQuad=aMiddleCode.get_quad(i);
+            if(aQuad.op.equals("unit")){
+                cur_depth=get_depth_fname(aQuad.x);
+                name=aQuad.x;
+                aAssembly.add_comm(String.format("%s:",aQuad.x),"","",false);
+                aAssembly.add_comm("push","ebp","",true);
+                aAssembly.add_comm("mov","ebp","esp",true);
+                aAssembly.add_comm("sub","esp",String.format("%s",size),true);
+            }
+            else if (aQuad.op.equals("endu")) {
+                aAssembly.add_comm(String.format("_end_%s:",aQuad.x),"","",false);
+                aAssembly.add_comm("mov","esp","ebp",true);
+                aAssembly.add_comm("pop","ebp","",true);
+                aAssembly.add_comm("ret","","",true);
+            }
+            else if (aQuad.op.equals("par")){
+                if(aQuad.y.equals("RET")){
+                    ret=true;
+                }
+            }
+            else if (aQuad.op.equals("call")){
+                call_depth = get_depth_fname(aQuad.z);
+                if(ret==true){
+                    ret=false;
+                }else{
+                    aAssembly.add_comm("sub","esp","4",true);
+                }
+                aAssembly.updateAl(cur_depth,call_depth);
+                aAssembly.add_comm("call",aQuad.z,"",true);
+            }
+            else if(aQuad.op.equals("ret")){
+                aAssembly.add_comm("jmp",String.format("_end_%s",name),"",true);
+            }
+        }
         aSymbolTable.exit();
     }
 
@@ -1203,7 +1272,7 @@ public class SemMidCode extends DepthFirstAdapter{
         }
     }
 
-    //FUNC CALL
+    //STMT FUNC CALL
     @Override
     public void caseAFuncCall(AFuncCall node)
     {
@@ -1244,6 +1313,14 @@ public class SemMidCode extends DepthFirstAdapter{
                 arg = type_stack.remove(type_stack.size()-1);
                 temp = foundSymbol.arg_types.get(arg_index);
                 argf = new type_info(0,0,temp.Type,temp.Type,temp.array_sizes.size(),0,false);
+                if(temp.ref && arg.Type.equals("int_const")){
+                    error = String.format("expected <%s> (%d) ,found \"%s\" <%s> (%d) in argument (%d) of function \"%s\"",argf.Type,argf.array_max_dim-argf.array_cur_dim,arg.name,arg.Type,arg.array_max_dim-arg.array_cur_dim,i+1,foundSymbol.name);
+                    aSymbolTable.print_error(arg.line,arg.pos,error);
+                }
+                else if(temp.ref && arg.Type.equals("char_const")){
+                    error = String.format("expected <%s> (%d) ,found \"%s\" <%s> (%d) in argument (%d) of function \"%s\"",argf.Type,argf.array_max_dim-argf.array_cur_dim,arg.name,arg.Type,arg.array_max_dim-arg.array_cur_dim,i+1,foundSymbol.name);
+                    aSymbolTable.print_error(arg.line,arg.pos,error);
+                }
                 if(!equiv(arg,argf)){
                     error = String.format("expected <%s> (%d) ,found \"%s\" <%s> (%d) in argument (%d) of function \"%s\"",argf.Type,argf.array_max_dim-argf.array_cur_dim,arg.name,arg.Type,arg.array_max_dim-arg.array_cur_dim,i+1,foundSymbol.name);
                     aSymbolTable.print_error(arg.line,arg.pos,error);

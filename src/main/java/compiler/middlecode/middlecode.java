@@ -6,6 +6,19 @@ import java.util.*;
 
 public class middlecode{
     int start_address=0;
+    int unit_pos=0;
+
+    int last_unit_pos(int next_unit){
+        int last_pos=unit_pos;
+        unit_pos=next_unit;
+        return last_pos;
+    }
+
+    public int next_4(int n){
+        int a=n&3;
+        if(a==0) return n;
+        return n+(4-a);
+    }
 
     public class quad{
         String op;
@@ -18,6 +31,10 @@ public class middlecode{
             this.y=y;
             this.z=z;
         }
+    }
+
+    public quad get_quad(int i){
+        return quads.get(i);
     }
 
     public class vars_range{
@@ -47,6 +64,9 @@ public class middlecode{
         return temp_variable_index;
     }
 
+    public int get_start_address(){
+        return start_address;
+    }
     public void set_start_address(int a){
         start_address=a;
     }
@@ -69,14 +89,13 @@ public class middlecode{
 
     public String newtemp(String Type){
         String Name = String.format("$%d",temp_variable_index++);
-        int address,pad;
+        int address;
         var_info temp_var;
         address=start_address;
         if(Type.equals("char")){
             start_address+=1;
         }else if (Type.equals("int")){
-            pad=start_address%4;
-            address+=pad;
+            address=next_4(address);
             start_address+=1;
         }
         temp_var=new var_info(Type,address);
