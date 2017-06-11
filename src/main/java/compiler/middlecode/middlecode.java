@@ -5,6 +5,7 @@ import java.io.*;
 import java.util.*;
 
 public class middlecode{
+    int start_address=0;
 
     public class quad{
         String op;
@@ -19,9 +20,41 @@ public class middlecode{
         }
     }
 
+    public class vars_range{
+        int from;
+        int to;
+        public vars_range(int from,int to){
+            this.from=from;
+            this.to=to;
+        }
+    }
+
+    class var_info{
+        String type;
+        int address;
+        public var_info(String type,int address){
+            this.type=type;
+            this.address=address;
+        }
+    }
+
     int temp_variable_index = 0;
     ArrayList<quad> quads = new ArrayList<quad>();
-    ArrayList<String> var_types = new ArrayList <String>();
+    ArrayList<var_info> vars = new ArrayList <var_info>();
+    Map<String,vars_range> function_vars = new HashMap<String,vars_range>();
+
+    public int get_var_index(){
+        return temp_variable_index;
+    }
+
+    public void set_start_address(int a){
+        start_address=a;
+    }
+
+    public void add_range(String fun_name,int from,int to){
+        vars_range temp = new vars_range(from,to);
+        function_vars.put(fun_name,temp);
+    }
 
     public int nextquad(){
         return quads.size();
@@ -36,7 +69,18 @@ public class middlecode{
 
     public String newtemp(String Type){
         String Name = String.format("$%d",temp_variable_index++);
-        var_types.add(Type);
+        int address,pad;
+        var_info temp_var;
+        address=start_address;
+        if(Type.equals("char")){
+            start_address+=1;
+        }else if (Type.equals("int")){
+            pad=start_address%4;
+            address+=pad;
+            start_address+=1;
+        }
+        temp_var=new var_info(Type,address);
+        vars.add(temp_var);
         return Name;
     }
 

@@ -9,6 +9,7 @@ import java.util.*;
 public class SymbolTable {
     Hashtable<String, Integer> symbol_hash;
     ArrayList<record> symbols;
+    ArrayList<Integer> local_addresses;
     ArrayList<Integer> depths;
     int curDepth;
 
@@ -20,11 +21,12 @@ public class SymbolTable {
         ArrayList<Integer> array_sizes;
         ArrayList<argument> arg_types;
         int Depth;
+        int address;
         boolean ref;
         boolean declared;
         boolean arg;
 
-        public SymbolTableRecord(int line,int pos,String name,String type,String ret_type, int Depth, boolean ref,ArrayList<Integer> array_sizes, ArrayList<argument> arg_types,boolean declared ,boolean arg){
+        public SymbolTableRecord(int line,int pos,String name,String type,String ret_type, int Depth, boolean ref,ArrayList<Integer> array_sizes, ArrayList<argument> arg_types,boolean declared ,boolean arg,int address){
             this.line = line;
             this.pos = pos;
             this.name=name;
@@ -34,6 +36,7 @@ public class SymbolTable {
             this.arg = arg;
             this.declared = declared;
             this.ret_type = ret_type;
+            this.address = address;
             if(array_sizes!=null){
                 this.array_sizes = new ArrayList<Integer>(array_sizes);
             }
@@ -48,6 +51,9 @@ public class SymbolTable {
             }
         }
     }
+    public boolean divided_4(int a){
+        return a % 4 == 0? true :false;
+    }
 
     public void print_error(int line,int pos ,String error){
         System.out.printf("[ERROR] (l:%d,p:%d) \t: %s\n",line,pos,error);
@@ -57,8 +63,8 @@ public class SymbolTable {
     class record {
         SymbolTableRecord aSymbol;
         int next;
-        public record(int next,int line,int pos,String name,String type,String ret_type,int Depth, boolean ref,ArrayList<Integer> array_sizes,ArrayList<argument> arg_types,boolean declared,boolean arg){
-            aSymbol = new SymbolTableRecord(line,pos,name,type,ret_type,Depth,ref,array_sizes,arg_types,declared,arg);
+        public record(int next,int line,int pos,String name,String type,String ret_type,int Depth, boolean ref,ArrayList<Integer> array_sizes,ArrayList<argument> arg_types,boolean declared,boolean arg,int address){
+            aSymbol = new SymbolTableRecord(line,pos,name,type,ret_type,Depth,ref,array_sizes,arg_types,declared,arg,address);
             this.next = next;
         }
     }
@@ -67,6 +73,7 @@ public class SymbolTable {
         symbol_hash = new Hashtable<String, Integer> ();
         symbols = new ArrayList<record>();
         depths = new ArrayList<Integer>();
+        local_addresses = new ArrayList<Integer>();
         depths.add(-1);
         curDepth=0;
     }
@@ -75,6 +82,7 @@ public class SymbolTable {
         curDepth++;
         //System.out.printf("curDepth: %d\n",curDepth);
         depths.add(-1);
+        local_addresses.add(0);
     }
 
     public int insert(int line, int pos,String name,String type,String ret_type,boolean ref,ArrayList<Integer> array_sizes,ArrayList<argument> arg_types,boolean declared,boolean arg){
@@ -189,9 +197,32 @@ public class SymbolTable {
         }
         //new record in symbol table
         symbol_hash.put(name,symbols.size());
-        temp = new record(prev,line,pos,name,type,ret_type,curDepth,ref,array_sizes,arg_types,declared,arg);
+        int address=0,pad=0;
+        if(!type.equals("fun") && !arg){
+            address=local_addresses.get(local_addresses.size()-1);
+            if(array_sizes.size()==0){
+                if(type.equals("int")){
+                    if(divided_4(address)){
+                        pad=address%4;
+                    }
+                    address+=pad;
+                    local_addresses.set(local_addresses.size()-1,address+4);
+                }
+                else{
+                    local_addresses.set(local_addresses.size()-1,address+1);
+                }
+            }
+            else{
+
+            }
+        }
+        temp = new record(prev,line,pos,name,type,ret_type,curDepth,ref,array_sizes,arg_types,declared,arg,address);
         symbols.add(temp);
         return 0;
+    }
+
+    public int get_last_depth_local_address(){
+        return local_addresses.get(local_addresses.size()-1);
     }
 
     public void add_basic_functions(){
@@ -290,6 +321,7 @@ public class SymbolTable {
     }
 
     public void exit(){
+        local_addresses.remove(local_addresses.size()-1);
         if(depths.get(depths.size()-1)==-1){
             depths.remove(depths.size()-1);
             curDepth-=1;

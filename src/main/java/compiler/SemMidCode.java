@@ -9,6 +9,7 @@ public class SemMidCode extends DepthFirstAdapter{
     SymbolTable aSymbolTable = new SymbolTable();
     ArrayList<argument> temp_args;
     middlecode aMiddleCode = new middlecode();
+    assembly aAssembly = new assembly();
 
     class type_info{
         int line,pos;
@@ -71,18 +72,18 @@ public class SemMidCode extends DepthFirstAdapter{
         int dims_dif_b=b.array_max_dim-b.array_cur_dim;
         if(dims_dif_a == dims_dif_b ){
             //if(dims_dif_a == 0 && dims_dif_b == 0){
-                if (a.Type.equals(b.Type)){
-                    return true;
-                }
-                else{
-                    boolean integ,charac;
-                    integ=check_both(a.Type,b.Type,"int","int_const");
-                    charac=check_both(a.Type,b.Type,"char","char_const");
-                    return (integ || charac);
-                }
+            if (a.Type.equals(b.Type)){
+                return true;
+            }
+            else{
+                boolean integ,charac;
+                integ=check_both(a.Type,b.Type,"int","int_const");
+                charac=check_both(a.Type,b.Type,"char","char_const");
+                return (integ || charac);
+            }
             //}
             //else{
-                //return false;
+            //return false;
             //}
         }
         return false;
@@ -97,24 +98,34 @@ public class SemMidCode extends DepthFirstAdapter{
         for(int i = 0; i < s.length(); i++) {
             if(i == 0 && s.charAt(i) == '-') {
                 if(s.length() == 1) return false;
-                    else continue;
+                else continue;
             }
             if(Character.digit(s.charAt(i),radix) < 0) return false;
         }
         return true;
     }
 
+    //PROGRAM IN
     @Override
     public void inAProgram(AProgram node){
         aSymbolTable.add_basic_functions();
+        aAssembly.add_comm("main:","","",false);
+        aAssembly.add_comm("push","ebp","",true);
+        aAssembly.add_comm("mov","ebp","esp",true);
     }
 
+    //PROGRAM OUT
     @Override
     public void outAProgram(AProgram node){
-        aMiddleCode.print_quads();
+        //aMiddleCode.print_quads();
+        aAssembly.add_comm("mov","eax","0",true);
+        aAssembly.add_comm("mov","esp","ebp",true);
+        aAssembly.add_comm("pop","ebp","",true);
+        aAssembly.add_comm("ret","","",true);
+        aAssembly.print_comms();
     }
 
-    //func-def
+    //FUNC DEF IN
     @Override
     public void inAFuncDef(AFuncDef node){
         String fun_name;
@@ -127,14 +138,15 @@ public class SemMidCode extends DepthFirstAdapter{
         AFparDef node_f;
         List<PFparDef> copy = new ArrayList<PFparDef>(node.getFparDef());
         if(first_func_def == true){
-                if(copy.size()!=0){
-                    error = String.format("function %s can't have arguments",node.getTId().toString().replaceAll("\\s+",""));
-                    aSymbolTable.print_error(node.getTId().getLine(),node.getTId().getPos(),error);
-                }
-                if(!node.getRetType().toString().replaceAll("\\s+","").equals("nothing")){
-                    error = String.format("function %s can't have returning argument",node.getTId().toString().replaceAll("\\s+",""));
-                    aSymbolTable.print_error(node.getTId().getLine(),node.getTId().getPos(),error);
-                }
+            if(copy.size()!=0){
+                error = String.format("function %s can't have arguments",node.getTId().toString().replaceAll("\\s+",""));
+                aSymbolTable.print_error(node.getTId().getLine(),node.getTId().getPos(),error);
+            }
+            if(!node.getRetType().toString().replaceAll("\\s+","").equals("nothing")){
+                error = String.format("function %s can't have returning argument",node.getTId().toString().replaceAll("\\s+",""));
+                aSymbolTable.print_error(node.getTId().getLine(),node.getTId().getPos(),error);
+            }
+            aAssembly.add_comm("call",String.format("%s_0",fun_name),"",true);
         }
         first_func_def=false;
         for(PFparDef e : copy)
@@ -142,7 +154,7 @@ public class SemMidCode extends DepthFirstAdapter{
             node_f = (AFparDef) e;
             ArrayList<Integer> array_sizes;
             ArrayList<String> ids;
-                    boolean ref = false;
+            boolean ref = false;
             String TypeOfArg;
             argument arg;
             //REF
@@ -209,6 +221,7 @@ public class SemMidCode extends DepthFirstAdapter{
         }
     }
 
+    //FUNC DEF CASE
     @Override
     public void caseAFuncDef(AFuncDef node)
     {
@@ -238,7 +251,9 @@ public class SemMidCode extends DepthFirstAdapter{
             }
         }
         {
+            int from_tempv,to_tempv;
             aMiddleCode.genquad("unit",String.format("%s_%d",foundSymbol.name,foundSymbol.Depth),"-","-");
+            from_tempv=aMiddleCode.get_var_index();
             ArrayList<Integer> L=aMiddleCode.emptylist();
             List<PStmt> copy = new ArrayList<PStmt>(node.getStmt());
             info_node a_stmt;
@@ -251,11 +266,14 @@ public class SemMidCode extends DepthFirstAdapter{
             }
             info_node temp_mi = new info_node("","block",L,null,null,false);
             mi_info_nodes.add(temp_mi);
+            to_tempv=aMiddleCode.get_var_index();
             aMiddleCode.genquad("endu",String.format("%s_%d",foundSymbol.name,foundSymbol.Depth),"-","-");
+            aMiddleCode.add_range(String.format("%s_%d",foundSymbol.name,foundSymbol.Depth),from_tempv,to_tempv);
         }
         outAFuncDef(node);
     }
 
+    //FUNC DEF OUT
     @Override
     public void outAFuncDef(AFuncDef node){
         fun_name_type tempf=function_stack.get(function_stack.size()-1);
@@ -270,7 +288,7 @@ public class SemMidCode extends DepthFirstAdapter{
         aSymbolTable.exit();
     }
 
-    //func-decl
+    //FUNC DECL
     @Override
     public void inAFuncDecl(AFuncDecl node){
         String fun_name;
@@ -322,7 +340,7 @@ public class SemMidCode extends DepthFirstAdapter{
         aSymbolTable.insert(node.getTId().getLine(),node.getTId().getPos(),fun_name,Type,ret_type,false,null,temp_args,false,false);
     }
 
-    //var-def
+    //VAR DEF
     @Override
     public void inAVarDef(AVarDef node)
     {
@@ -346,6 +364,7 @@ public class SemMidCode extends DepthFirstAdapter{
 
     //EXPR
 
+    //EXPR CONST
     @Override
     public void inAConstExpr(AConstExpr node)
     {
@@ -355,6 +374,7 @@ public class SemMidCode extends DepthFirstAdapter{
         mi_info_nodes.add(temp_mi);
     }
 
+    //EXPR CHAR
     @Override
     public void inACharExpr(ACharExpr node)
     {
@@ -364,6 +384,7 @@ public class SemMidCode extends DepthFirstAdapter{
         mi_info_nodes.add(temp_mi);
     }
 
+    //EXPR PLUS
     @Override
     public void outAPlusExpr(APlusExpr node)
     {
@@ -398,6 +419,7 @@ public class SemMidCode extends DepthFirstAdapter{
         mi_info_nodes.add(temp_mi);
     }
 
+    //EXPR MINUS
     @Override
     public void outAMinusExpr(AMinusExpr node)
     {
@@ -432,6 +454,7 @@ public class SemMidCode extends DepthFirstAdapter{
         mi_info_nodes.add(temp_mi);
     }
 
+    //EXPR MULT
     @Override
     public void outAPostMultExpr(APostMultExpr node)
     {
@@ -466,6 +489,7 @@ public class SemMidCode extends DepthFirstAdapter{
         mi_info_nodes.add(temp_mi);
     }
 
+    //EXPR DIV
     @Override
     public void outAPostDivExpr(APostDivExpr node)
     {
@@ -500,6 +524,7 @@ public class SemMidCode extends DepthFirstAdapter{
         mi_info_nodes.add(temp_mi);
     }
 
+    //EXPR MOD
     @Override
     public void outAPostModExpr(APostModExpr node)
     {
@@ -534,6 +559,7 @@ public class SemMidCode extends DepthFirstAdapter{
         mi_info_nodes.add(temp_mi);
     }
 
+    //EXPR IN PLUS
     @Override
     public void outAInplusExpr(AInplusExpr node)
     {
@@ -557,6 +583,7 @@ public class SemMidCode extends DepthFirstAdapter{
         mi_info_nodes.add(temp_mi);
     }
 
+    //EXPR IN MINUS
     @Override
     public void outAInminusExpr(AInminusExpr node)
     {
@@ -582,6 +609,7 @@ public class SemMidCode extends DepthFirstAdapter{
 
     //LVALUE
 
+    //LVALUE ID
     @Override
     public void outALValueIdLValue(ALValueIdLValue node){
         int dims = node.getExpr().size();
@@ -597,7 +625,7 @@ public class SemMidCode extends DepthFirstAdapter{
                 error = String.format("accessing dimension (%d) when id \"%s\" has (%d) ",dims,node.getTId().toString().replaceAll("\\s+",""),aSymbol.array_sizes.size());
                 aSymbolTable.print_error(node.getTId().getLine(),node.getTId().getPos(),error);
             }
-        //DONE TYPE check
+            //DONE TYPE check
         }
         for(int i=0; i < dims ; i++ ){
             array_index=type_stack.remove(pos2remove);
@@ -670,6 +698,8 @@ public class SemMidCode extends DepthFirstAdapter{
         }
     }
 
+
+    //LVALUE STRING
     @Override
     public void outALValueStringLValue(ALValueStringLValue node)
     {
@@ -720,6 +750,7 @@ public class SemMidCode extends DepthFirstAdapter{
 
     //COND
 
+    //COND EQUAL
     @Override
     public void outACondEqualCond(ACondEqualCond node)
     {
@@ -765,6 +796,7 @@ public class SemMidCode extends DepthFirstAdapter{
         mi_info_nodes.add(temp_mi);
     }
 
+    //COND HASH
     @Override
     public void outACondHashCond(ACondHashCond node)
     {
@@ -810,6 +842,7 @@ public class SemMidCode extends DepthFirstAdapter{
         mi_info_nodes.add(temp_mi);
     }
 
+    //COND BIGGER
     @Override
     public void outACondBiggerCond(ACondBiggerCond node)
     {
@@ -855,6 +888,7 @@ public class SemMidCode extends DepthFirstAdapter{
         mi_info_nodes.add(temp_mi);
     }
 
+    //COND LESS
     @Override
     public void outACondLessCond(ACondLessCond node)
     {
@@ -900,6 +934,7 @@ public class SemMidCode extends DepthFirstAdapter{
         mi_info_nodes.add(temp_mi);
     }
 
+    //COND LEQ
     @Override
     public void outACondLeqCond(ACondLeqCond node)
     {
@@ -945,6 +980,7 @@ public class SemMidCode extends DepthFirstAdapter{
         mi_info_nodes.add(temp_mi);
     }
 
+    //COND BEQ
     @Override
     public void outACondBeqCond(ACondBeqCond node)
     {
@@ -990,6 +1026,7 @@ public class SemMidCode extends DepthFirstAdapter{
         mi_info_nodes.add(temp_mi);
     }
 
+    //COND NOT
     @Override
     public void outACondnotNotCond(ACondnotNotCond node)
     {
@@ -999,6 +1036,7 @@ public class SemMidCode extends DepthFirstAdapter{
         mi_info_nodes.add(temp_mi);
     }
 
+    //COND AND
     @Override
     public void caseACondandAndCond(ACondandAndCond node)
     {
@@ -1022,6 +1060,7 @@ public class SemMidCode extends DepthFirstAdapter{
         outACondandAndCond(node);
     }
 
+    //COND OR
     @Override
     public void caseACondOrCond(ACondOrCond node)
     {
@@ -1044,6 +1083,8 @@ public class SemMidCode extends DepthFirstAdapter{
         mi_info_nodes.add(temp_mi);
         outACondOrCond(node);
     }
+
+    //STMT
 
     //STMT IF
     @Override
@@ -1086,6 +1127,7 @@ public class SemMidCode extends DepthFirstAdapter{
         outAStmtIfStmt(node);
     }
 
+    //STMT SEMI
     @Override
     public void outAStmtSemiStmt(AStmtSemiStmt node)
     {
@@ -1093,6 +1135,7 @@ public class SemMidCode extends DepthFirstAdapter{
         mi_info_nodes.add(temp_mi);
     }
 
+    //STMT WHILE
     @Override
     public void caseAStmtWhileStmt(AStmtWhileStmt node)
     {
@@ -1117,6 +1160,7 @@ public class SemMidCode extends DepthFirstAdapter{
         outAStmtWhileStmt(node);
     }
 
+    //STMT ASSIGN
     @Override
     public void outAStmtLvalueStmt(AStmtLvalueStmt node)
     {
@@ -1159,6 +1203,7 @@ public class SemMidCode extends DepthFirstAdapter{
         }
     }
 
+    //FUNC CALL
     @Override
     public void caseAFuncCall(AFuncCall node)
     {
@@ -1241,7 +1286,7 @@ public class SemMidCode extends DepthFirstAdapter{
         outAFuncCall(node);
     }
 
-
+    //RETURN STMT
     @Override
     public void outAStmtReturnStmt(AStmtReturnStmt node)
     {
@@ -1289,6 +1334,7 @@ public class SemMidCode extends DepthFirstAdapter{
         }
     }
 
+    //STMT BLOCK
     @Override
     public void caseAStmtBlockStmt(AStmtBlockStmt node)
     {
