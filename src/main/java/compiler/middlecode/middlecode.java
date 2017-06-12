@@ -60,6 +60,10 @@ public class middlecode{
     ArrayList<var_info> vars = new ArrayList <var_info>();
     Map<String,vars_range> function_vars = new HashMap<String,vars_range>();
 
+    public var_info get_var_info(String var){
+        int place=Integer.parseInt(var.substring(1,var.length()-1));
+        return vars.get(place);
+    }
     public int get_var_index(){
         return temp_variable_index;
     }

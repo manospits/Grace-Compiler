@@ -121,6 +121,80 @@ public class SemMidCode extends DepthFirstAdapter{
         return Integer.parseInt(num);
     }
 
+    public boolean  check_array(String a){
+        if(a.charAt(0)=='[' && a.charAt(a.length()-1)==']'){
+            return true;
+        }
+        else return false;
+    }
+
+    public String remove_array(String a){
+        return a.substring(1,a.length()-2);
+    }
+
+    public boolean check_temp(String a){
+        if(a.charAt(0)=='$'){
+            return true;
+        }
+        else return false;
+    }
+
+    public boolean check_const(String a){
+        if(isInteger(a) || a.charAt(0)=='\'' || a.charAt(0)=='\"' ){
+            return true;
+        }
+        else return false;
+    }
+
+    public String get_const_type(String a){
+        if(isInteger(a) ){
+            return "int";
+        }
+        else if( a.charAt(0)=='\'' ){
+            return "char";
+        }
+        else if(a.charAt(0)=='\"'){
+            return "string";
+        }
+        return "";
+    }
+
+    public assembly.as_type create_as_type(String a,int func_depth){
+        String name=a;
+        String Type;
+        boolean ref=false;
+        boolean arg=false;
+        boolean constant=false;
+        String label="";
+        int address=0,na,np;
+        na=np=func_depth+1;
+        //if(check_array(a)){
+            //name=a.substring(1,a.length()-2);
+            //load("edi",name,np);
+            //reg="edi";
+        //}
+        if(check_const(name)){
+            constant=true;
+            Type = get_const_type(name);
+            //TODO FILL STRING LABELS
+        }
+        else if(check_temp(name)){
+           middlecode.var_info temp=aMiddleCode.get_var_info(name);
+           address=temp.address;
+           Type=temp.type;
+        }
+        else{
+            SymbolTable.SymbolTableRecord aSymbol=aSymbolTable.lookup(name);
+            address=aSymbol.address;
+            na=aSymbol.Depth;
+            ref=aSymbol.ref;
+            arg=aSymbol.arg;
+            Type=aSymbol.type;
+            address=aSymbol.address;
+        }
+        assembly.as_type temp_as=aAssembly.fill_as_type(a,Type,ref,arg,constant,address,np,na,label);
+        return temp_as;
+    }
     //PROGRAM IN
     @Override
     public void inAProgram(AProgram node){
@@ -156,6 +230,7 @@ public class SemMidCode extends DepthFirstAdapter{
                 error = String.format("function %s can't have returning argument",node.getTId().toString().replaceAll("\\s+",""));
                 aSymbolTable.print_error(node.getTId().getLine(),node.getTId().getPos(),error);
             }
+            function_name=String.format("%s_%d",fun_name,0);
         }
         first_func_def=false;
         for(PFparDef e : copy)
@@ -280,7 +355,6 @@ public class SemMidCode extends DepthFirstAdapter{
             aMiddleCode.genquad("endu",String.format("%s_%d",foundSymbol.name,foundSymbol.Depth),"-","-");
             aMiddleCode.add_range(String.format("%s_%d",foundSymbol.name,foundSymbol.Depth),from_tempv,to_tempv);
         }
-        function_name=String.format("%s_%d",foundSymbol.name,foundSymbol.Depth);
         outAFuncDef(node);
     }
 
@@ -307,6 +381,8 @@ public class SemMidCode extends DepthFirstAdapter{
             aAssembly.add_comm("main:","","",false);
             aAssembly.add_comm("push","ebp","",true);
             aAssembly.add_comm("mov","ebp","esp",true);
+            aAssembly.add_comm("sub","esp","4",true);
+            aAssembly.add_comm("push","ebp","",true);
             aAssembly.add_comm("call",function_name,"",true);
             aAssembly.add_comm("mov","eax","0",true);
             aAssembly.add_comm("mov","esp","ebp",true);
@@ -314,10 +390,13 @@ public class SemMidCode extends DepthFirstAdapter{
             aAssembly.add_comm("ret","","",true);
         }
         middlecode.quad aQuad;
+        ArrayList<middlecode.quad> parameters=new ArrayList<middlecode.quad>();
         int size,cur_depth=0,call_depth;
         size=aMiddleCode.get_start_address();
         size=next_4(size);
         String name="";
+        assembly.as_type temp_as;
+        assembly.as_type temp_as2;
         boolean ret=false;
         for(int i=from;i<to;i++){
             aQuad=aMiddleCode.get_quad(i);
@@ -339,8 +418,27 @@ public class SemMidCode extends DepthFirstAdapter{
                 if(aQuad.y.equals("RET")){
                     ret=true;
                 }
+                else{
+                    parameters.add(aQuad);
+                }
             }
             else if (aQuad.op.equals("call")){
+                int par_size=parameters.size();
+                for(int j = par_size-1;j>=0;j--){
+                    middlecode.quad q=parameters.get(j);
+                    if(q.y.equals("V")){
+                        if(check_array(q.x)){
+                            String ar_in;
+                            ar_in=remove_array(q.x);
+                            temp_as=create_as_type(ar_in,cur_depth);
+                            //TODO
+                        }
+                        temp_as=create_as_type(q.x,cur_depth);
+                        aAssembly.load("eax",temp_as);
+                        aAssembly.add_comm("push","eax","",true);
+                    }
+                }
+                parameters.clear();
                 call_depth = get_depth_fname(aQuad.z);
                 if(ret==true){
                     ret=false;
@@ -349,6 +447,18 @@ public class SemMidCode extends DepthFirstAdapter{
                 }
                 aAssembly.updateAl(cur_depth,call_depth);
                 aAssembly.add_comm("call",aQuad.z,"",true);
+                aAssembly.add_comm("sub","esp",String.format("%s",8+(par_size*4)),true);
+            }
+            else if(aQuad.op.equals(":=")){
+                temp_as=create_as_type(aQuad.x,cur_depth);
+                temp_as2=create_as_type(aQuad.z,cur_depth);
+                //System.out.printf("type %s %s %s\n",temp_as2.Type,temp_as2.arg,temp_as2.ref);
+                aAssembly.load("eax",temp_as);
+                if(temp_as2.Type.equals("char")){
+                    aAssembly.store("al",temp_as2);
+                }else{
+                    aAssembly.store("eax",temp_as2);
+                }
             }
             else if(aQuad.op.equals("ret")){
                 aAssembly.add_comm("jmp",String.format("_end_%s",name),"",true);
@@ -433,7 +543,8 @@ public class SemMidCode extends DepthFirstAdapter{
 
     //EXPR
 
-    //EXPR CONST
+    //EX
+    //PR CONST
     @Override
     public void inAConstExpr(AConstExpr node)
     {
@@ -728,8 +839,43 @@ public class SemMidCode extends DepthFirstAdapter{
                 int pos2remove_m = mi_info_nodes.size() - dims;
                 info_node index;
                 String tW="";
-                if(dims>1){
-                    for(int i=0; i < dims-1 ; i++ ){
+                if(dims-aSymbol.array_sizes.size()==0){
+                    if(dims>1){
+                        for(int i=0; i < dims-1 ; i++ ){
+                            index = mi_info_nodes.remove(pos2remove_m);
+                            W  = aMiddleCode.newtemp("int");
+                            int width=aSymbol.array_sizes.get(i+1);
+                            for(int j=i+2;j<dims;j++){
+                                width*=aSymbol.array_sizes.get(j);
+                            }
+                            place=index.place;
+                            if(index.array){
+                                place=String.format("[%s]",index.place);
+                            }
+                            aMiddleCode.genquad("*",String.format("%d",width),place,W);
+                            if(i!=0)
+                                aMiddleCode.genquad("+",tW,W,tW);
+                            else
+                                tW=W;
+                        }
+                        W  = aMiddleCode.newtemp("int");
+                        index = mi_info_nodes.remove(pos2remove_m);
+                        aMiddleCode.genquad("+",index.place,tW,W);
+                        tW=W;
+                    }
+                    else{
+                        index = mi_info_nodes.remove(pos2remove_m);
+                        place=index.place;
+                        if(index.array){
+                            place=String.format("[%s]",index.place);
+                        }
+                        tW=place;
+                    }
+                    W = aMiddleCode.newtemp("int");
+                    aMiddleCode.genquad("array",node.getTId().toString().replaceAll("\\s+",""),tW,W);
+                    temp_mi = new info_node(W,"int",null,null,null,true);
+                }else{
+                    for(int i=0; i < dims ; i++ ){
                         index = mi_info_nodes.remove(pos2remove_m);
                         W  = aMiddleCode.newtemp("int");
                         int width=aSymbol.array_sizes.get(i+1);
@@ -746,27 +892,14 @@ public class SemMidCode extends DepthFirstAdapter{
                         else
                             tW=W;
                     }
-                    W  = aMiddleCode.newtemp("int");
-                    index = mi_info_nodes.remove(pos2remove_m);
-                    aMiddleCode.genquad("+",index.place,tW,W);
-                    tW=W;
+                    W = aMiddleCode.newtemp("int");
+                    aMiddleCode.genquad("array",node.getTId().toString().replaceAll("\\s+",""),tW,W);
+                    temp_mi = new info_node(W,"int",null,null,null,false);
                 }
-                else{
-                    index = mi_info_nodes.remove(pos2remove_m);
-                    place=index.place;
-                    if(index.array){
-                        place=String.format("[%s]",index.place);
-                    }
-                    tW=place;
-                }
-                W = aMiddleCode.newtemp("int");
-                aMiddleCode.genquad("array",node.getTId().toString().replaceAll("\\s+",""),tW,W);
-                temp_mi = new info_node(W,"int",null,null,null,true);
                 mi_info_nodes.add(temp_mi);
             }
         }
     }
-
 
     //LVALUE STRING
     @Override

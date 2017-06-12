@@ -241,9 +241,6 @@ public class SymbolTable {
                         address=next_4(address);
                         local_addresses.set(local_addresses.size()-1,address+4);
                     }
-                    else{
-                        local_addresses.set(local_addresses.size()-1,address+1);
-                    }
                 }
                 else{
                     address=next_4(address);
