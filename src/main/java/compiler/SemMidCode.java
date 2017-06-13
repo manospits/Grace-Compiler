@@ -13,7 +13,7 @@ public class SemMidCode extends DepthFirstAdapter{
     assembly aAssembly = new assembly();
     String error,function_name;
     int string_dim=1;
-    Pattern p = Pattern.compile("[a-zA-Z_]_(\\d+)$"); //used for getting depth from a function name
+    Pattern p = Pattern.compile("[a-zA-Z_\\d]_(\\d+)$"); //used for getting depth from a function name
 
 
     class type_info{
@@ -160,7 +160,7 @@ public class SemMidCode extends DepthFirstAdapter{
         return "";
     }
 
-    public assembly.as_type create_as_type(String a,int func_depth){
+    public assembly.as_type create_as_type(String a,int func_depth,String ret_type){
         String name=a;
         String Type;
         boolean ref=false;
@@ -176,7 +176,13 @@ public class SemMidCode extends DepthFirstAdapter{
             //load("edi",name,np);
             //reg="edi";
         //}
-        if(check_const(name)){
+        if(name.equals("$$")){
+            ref=true;
+            arg=true;
+            address=-4;
+            Type=ret_type;
+        }
+        else if(check_const(name)){
             constant=true;
             Type = get_const_type(name);
             //TODO FILL STRING LABELS
@@ -205,10 +211,10 @@ public class SemMidCode extends DepthFirstAdapter{
         return temp_as;
     }
 
-    public void load(String R,String a,int depth){
+    public void load(String R,String a,int depth,String ret_type){
         assembly.as_type temp_as;
         if(check_array(a)){
-            temp_as=create_as_type(remove_array(a),depth);
+            temp_as=create_as_type(remove_array(a),depth,ret_type);
             aAssembly.load("edi",temp_as);
             if(temp_as.pointing.equals("int")){
                 aAssembly.add_comm("mov",R,"DWORD ptr [edi]",true);
@@ -218,19 +224,20 @@ public class SemMidCode extends DepthFirstAdapter{
             }
         }
         else{
-            temp_as=create_as_type(a,depth);
+            temp_as=create_as_type(a,depth,ret_type);
             aAssembly.load(R,temp_as);
         }
     }
 
-    public void load_addr(String R,String a,int depth){
+    public void load_addr(String R,String a,int depth,String ret_type){
+        //System.out.printf("%s\n",a);
         assembly.as_type temp_as;
         if(check_array(a)){
-            temp_as=create_as_type(remove_array(a),depth);
+            temp_as=create_as_type(remove_array(a),depth,ret_type);
             aAssembly.load(R,temp_as);
         }
         else{
-            temp_as=create_as_type(a,depth);
+            temp_as=create_as_type(a,depth,ret_type);
             aAssembly.load_addr(R,temp_as);
         }
     }
@@ -239,10 +246,10 @@ public class SemMidCode extends DepthFirstAdapter{
         return String.format("%cl",R.charAt(1));
     }
 
-    public void store(String R,String a,int depth){
+    public void store(String R,String a,int depth,String ret_type){
         assembly.as_type temp_as;
         if(check_array(a)){
-            temp_as=create_as_type(remove_array(a),depth);
+            temp_as=create_as_type(remove_array(a),depth,ret_type);
             aAssembly.load("edi",temp_as);
             if(temp_as.pointing.equals("int")){
                 aAssembly.add_comm("mov","DWORD ptr [edi]",R,true);
@@ -252,7 +259,7 @@ public class SemMidCode extends DepthFirstAdapter{
             }
         }
         else{
-            temp_as=create_as_type(a,depth);
+            temp_as=create_as_type(a,depth,ret_type);
             if(temp_as.Type.equals("int")){
                 aAssembly.store(R,temp_as);
             }
@@ -430,12 +437,14 @@ public class SemMidCode extends DepthFirstAdapter{
     @Override
     public void outAFuncDef(AFuncDef node){
         fun_name_type tempf=function_stack.get(function_stack.size()-1);
+        String ret_type;
         if(!tempf.type.equals("nothing")){
             if(!return_check){
                 error = String.format("nothing returned in function %s with return type <%s>",tempf.name,tempf.type);
                 aSymbolTable.print_error(tempf.line,tempf.pos,error);
             }
         }
+        ret_type=tempf.type;
         return_check=false;
         function_stack.remove(function_stack.size()-1);
         //middlecode to assembly
@@ -459,6 +468,7 @@ public class SemMidCode extends DepthFirstAdapter{
         }
         middlecode.quad aQuad;
         ArrayList<middlecode.quad> parameters=new ArrayList<middlecode.quad>();
+        middlecode.quad ret_par=null;
         int size,cur_depth=0,call_depth;
         size=aMiddleCode.get_start_address();
         size=next_4(size);
@@ -467,6 +477,7 @@ public class SemMidCode extends DepthFirstAdapter{
         for(int i=from;i<to;i++){
             aAssembly.add_comm(String.format("_grace_%d:",i),"","",false);
             aQuad=aMiddleCode.get_quad(i);
+            //System.out.printf("%s %s %s %s\n",aQuad.op,aQuad.x,aQuad.y,aQuad.z);
             if(aQuad.op.equals("unit")){
                 cur_depth=get_depth_fname(aQuad.x);
                 name=aQuad.x;
@@ -484,6 +495,7 @@ public class SemMidCode extends DepthFirstAdapter{
             else if (aQuad.op.equals("par")){
                 if(aQuad.y.equals("RET")){
                     ret=true;
+                    ret_par=aQuad;
                 }
                 else{
                     parameters.add(aQuad);
@@ -494,11 +506,11 @@ public class SemMidCode extends DepthFirstAdapter{
                 for(int j = par_size-1;j>=0;j--){
                     middlecode.quad q=parameters.get(j);
                     if(q.y.equals("V")){
-                        load("eax",q.x,cur_depth);
+                        load("eax",q.x,cur_depth,ret_type);
                         aAssembly.add_comm("push","eax","",true);
                     }
                     else{
-                        load_addr("esi",q.x,cur_depth);
+                        load_addr("esi",q.x,cur_depth,ret_type);
                         aAssembly.add_comm("push","esi","",true);
                     }
                 }
@@ -506,7 +518,7 @@ public class SemMidCode extends DepthFirstAdapter{
                 call_depth = get_depth_fname(aQuad.z);
                 if(ret==true){
                     ret=false;
-                    load_addr("esi",aQuad.x,cur_depth);
+                    load_addr("esi",ret_par.x,cur_depth,ret_type);
                     aAssembly.add_comm("push","esi","",true);
                 }else{
                     aAssembly.add_comm("sub","esp","4",true);
@@ -517,12 +529,12 @@ public class SemMidCode extends DepthFirstAdapter{
             }
             else if(aQuad.op.equals(":=")){
                 //System.out.printf("type %s %s %s\n",temp_as2.Type,temp_as2.arg,temp_as2.ref);
-                load("eax",aQuad.x,cur_depth);
-                store("eax",aQuad.z,cur_depth);
+                load("eax",aQuad.x,cur_depth,ret_type);
+                store("eax",aQuad.z,cur_depth,ret_type);
             }
             else if(aQuad.op.equals("array")){
-                assembly.as_type a_type = create_as_type(aQuad.x,cur_depth);
-                load("eax",aQuad.y,cur_depth);
+                assembly.as_type a_type = create_as_type(aQuad.x,cur_depth,ret_type);
+                load("eax",aQuad.y,cur_depth,ret_type);
                 //aAssembly.add_comm("mov","eax",String.format("%s",a_type.size),true);
                 //aAssembly.add_comm("sub","eax","ebx",true);
                 if(a_type.Type.equals("int")){
@@ -533,78 +545,78 @@ public class SemMidCode extends DepthFirstAdapter{
                 }
                 aAssembly.add_comm("imul","ecx","",true);
                 //System.out.printf("type %s %s %s %s %d\n",a_type.a,a_type.Type,a_type.arg,a_type.ref,a_type.address);
-                load_addr("ecx",aQuad.x,cur_depth);
+                load_addr("ecx",aQuad.x,cur_depth,ret_type);
                 aAssembly.add_comm("add","ecx","eax",true);
-                store("ecx",aQuad.z,cur_depth);
+                store("ecx",aQuad.z,cur_depth,ret_type);
             }
             else if(aQuad.op.equals("+")){
-                load("eax",aQuad.x,cur_depth);
-                load("edx",aQuad.y,cur_depth);
+                load("eax",aQuad.x,cur_depth,ret_type);
+                load("edx",aQuad.y,cur_depth,ret_type);
                 aAssembly.add_comm("add","eax","edx",true);
-                store("eax",aQuad.z,cur_depth);
+                store("eax",aQuad.z,cur_depth,ret_type);
             }
             else if(aQuad.op.equals("-")){
-                load("eax",aQuad.x,cur_depth);
-                load("edx",aQuad.y,cur_depth);
+                load("eax",aQuad.x,cur_depth,ret_type);
+                load("edx",aQuad.y,cur_depth,ret_type);
                 aAssembly.add_comm("sub","eax","edx",true);
-                store("eax",aQuad.z,cur_depth);
+                store("eax",aQuad.z,cur_depth,ret_type);
             }
             else if(aQuad.op.equals("*")){
-                load("eax",aQuad.x,cur_depth);
-                load("ecx",aQuad.y,cur_depth);
+                load("eax",aQuad.x,cur_depth,ret_type);
+                load("ecx",aQuad.y,cur_depth,ret_type);
                 aAssembly.add_comm("imul","ecx","",true);
-                store("eax",aQuad.z,cur_depth);
+                store("eax",aQuad.z,cur_depth,ret_type);
             }
             else if(aQuad.op.equals("/")){
-                load("eax",aQuad.x,cur_depth);
+                load("eax",aQuad.x,cur_depth,ret_type);
                 aAssembly.add_comm("cwd","","",true);
-                load("ecx",aQuad.y,cur_depth);
+                load("ecx",aQuad.y,cur_depth,ret_type);
                 aAssembly.add_comm("idiv","ecx","",true);
-                store("eax",aQuad.z,cur_depth);
+                store("eax",aQuad.z,cur_depth,ret_type);
             }
             else if(aQuad.op.equals("%")){
-                load("eax",aQuad.x,cur_depth);
+                load("eax",aQuad.x,cur_depth,ret_type);
                 aAssembly.add_comm("cwd","","",true);
-                load("ecx",aQuad.y,cur_depth);
+                load("ecx",aQuad.y,cur_depth,ret_type);
                 aAssembly.add_comm("idiv","ecx","",true);
-                store("edx",aQuad.z,cur_depth);
+                store("edx",aQuad.z,cur_depth,ret_type);
             }
             else if(aQuad.op.equals("jump")){
                 aAssembly.add_comm("jmp",String.format("_grace_%s",aQuad.z),"",true);
             }
             else if(aQuad.op.equals("<")){
-                load("eax",aQuad.x,cur_depth);
-                load("edx",aQuad.y,cur_depth);
+                load("eax",aQuad.x,cur_depth,ret_type);
+                load("edx",aQuad.y,cur_depth,ret_type);
                 aAssembly.add_comm("cmp","eax","edx",true);
                 aAssembly.add_comm("jl",String.format("_grace_%s",aQuad.z),"",true);
             }
             else if(aQuad.op.equals(">")){
-                load("eax",aQuad.x,cur_depth);
-                load("edx",aQuad.y,cur_depth);
+                load("eax",aQuad.x,cur_depth,ret_type);
+                load("edx",aQuad.y,cur_depth,ret_type);
                 aAssembly.add_comm("cmp","eax","edx",true);
                 aAssembly.add_comm("jg",String.format("_grace_%s",aQuad.z),"",true);
             }
             else if(aQuad.op.equals("<=")){
-                load("eax",aQuad.x,cur_depth);
-                load("edx",aQuad.y,cur_depth);
+                load("eax",aQuad.x,cur_depth,ret_type);
+                load("edx",aQuad.y,cur_depth,ret_type);
                 aAssembly.add_comm("cmp","eax","edx",true);
                 aAssembly.add_comm("jle",String.format("_grace_%s",aQuad.z),"",true);
             }
             else if(aQuad.op.equals(">=")){
-                load("eax",aQuad.x,cur_depth);
-                load("edx",aQuad.y,cur_depth);
+                load("eax",aQuad.x,cur_depth,ret_type);
+                load("edx",aQuad.y,cur_depth,ret_type);
                 aAssembly.add_comm("cmp","eax","edx",true);
                 aAssembly.add_comm("jge",String.format("_grace_%s",aQuad.z),"",true);
             }
             else if(aQuad.op.equals("=")){
-                load("eax",aQuad.x,cur_depth);
-                load("edx",aQuad.y,cur_depth);
+                load("eax",aQuad.x,cur_depth,ret_type);
+                load("edx",aQuad.y,cur_depth,ret_type);
                 aAssembly.add_comm("cmp","eax","edx",true);
                 aAssembly.add_comm("je",String.format("_grace_%s",aQuad.z),"",true);
             }
             else if(aQuad.op.equals("#")){
-                load("eax",aQuad.x,cur_depth);
-                load("edx",aQuad.y,cur_depth);
+                load("eax",aQuad.x,cur_depth,ret_type);
+                load("edx",aQuad.y,cur_depth,ret_type);
                 aAssembly.add_comm("cmp","eax","edx",true);
                 aAssembly.add_comm("jne",String.format("_grace_%s",aQuad.z),"",true);
             }
