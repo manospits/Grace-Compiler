@@ -208,7 +208,7 @@ public class SymbolTable {
             error=String.format("expected ref in array parameter");
             print_error(line,pos,error);
         }
-        int address=0,pad=0;
+        int address=0,next_address=0;
         if(!type.equals("fun") ){
             if(!arg){
                 address=local_addresses.get(local_addresses.size()-1);
@@ -228,24 +228,20 @@ public class SymbolTable {
                     }
                     if(type.equals("int")){
                         address=next_4(address);
-                        local_addresses.set(local_addresses.size()-1,address+total_size);
+                        next_address=address+(total_size*4);
+                        address=next_address-4;
+                        local_addresses.set(local_addresses.size()-1,next_address);
                     }
                     else{
-                        local_addresses.set(local_addresses.size()-1,address+total_size);
+                        next_address=address+(total_size*1);
+                        address=next_address-1;
+                        local_addresses.set(local_addresses.size()-1,next_address);
                     }
                 }
             }
             if(arg){
-                if(!ref){
-                    if(type.equals("int")){
-                        address=next_4(address);
-                        local_addresses.set(local_addresses.size()-1,address+4);
-                    }
-                }
-                else{
-                    address=next_4(address);
-                    local_addresses.set(local_addresses.size()-1,address+4);
-                }
+                address=next_4(arg_addresses.get(arg_addresses.size()-1));
+                arg_addresses.set(arg_addresses.size()-1,address+4);
             }
         }
         //new record in symbol table

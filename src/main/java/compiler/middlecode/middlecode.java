@@ -48,10 +48,12 @@ public class middlecode{
 
     class var_info{
         String type;
+        String pointing;
         int address;
-        public var_info(String type,int address){
+        public var_info(String type,int address,String pointing){
             this.type=type;
             this.address=address;
+            this.pointing=pointing;
         }
     }
 
@@ -61,7 +63,7 @@ public class middlecode{
     Map<String,vars_range> function_vars = new HashMap<String,vars_range>();
 
     public var_info get_var_info(String var){
-        int place=Integer.parseInt(var.substring(1,var.length()-1));
+        int place=Integer.parseInt(var.substring(1,var.length()));
         return vars.get(place);
     }
     public int get_var_index(){
@@ -91,7 +93,7 @@ public class middlecode{
         return quads.size()-1;
     }
 
-    public String newtemp(String Type){
+    public String newtemp(String Type,String pointing){
         String Name = String.format("$%d",temp_variable_index++);
         int address;
         var_info temp_var;
@@ -100,9 +102,9 @@ public class middlecode{
             start_address+=1;
         }else if (Type.equals("int")){
             address=next_4(address);
-            start_address+=1;
+            start_address=address+4;
         }
-        temp_var=new var_info(Type,address);
+        temp_var=new var_info(Type,address,pointing);
         vars.add(temp_var);
         return Name;
     }

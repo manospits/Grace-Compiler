@@ -15,6 +15,7 @@ public class SemMidCode extends DepthFirstAdapter{
     int string_dim=1;
     Pattern p = Pattern.compile("[a-zA-Z_]_(\\d+)$"); //used for getting depth from a function name
 
+
     class type_info{
         int line,pos;
         String name;
@@ -129,7 +130,7 @@ public class SemMidCode extends DepthFirstAdapter{
     }
 
     public String remove_array(String a){
-        return a.substring(1,a.length()-2);
+        return a.substring(1,a.length()-1);
     }
 
     public boolean check_temp(String a){
@@ -166,8 +167,10 @@ public class SemMidCode extends DepthFirstAdapter{
         boolean arg=false;
         boolean constant=false;
         String label="";
+        String pointing="";
         int address=0,na,np;
-        na=np=func_depth+1;
+        na=np=func_depth;
+        int size=0;
         //if(check_array(a)){
             //name=a.substring(1,a.length()-2);
             //load("edi",name,np);
@@ -182,19 +185,83 @@ public class SemMidCode extends DepthFirstAdapter{
            middlecode.var_info temp=aMiddleCode.get_var_info(name);
            address=temp.address;
            Type=temp.type;
+           pointing=temp.pointing;
         }
         else{
             SymbolTable.SymbolTableRecord aSymbol=aSymbolTable.lookup(name);
             address=aSymbol.address;
-            na=aSymbol.Depth;
+            na=aSymbol.Depth-1;
             ref=aSymbol.ref;
             arg=aSymbol.arg;
             Type=aSymbol.type;
             address=aSymbol.address;
+            int total_size=1;
+            for(int s:aSymbol.array_sizes){
+                total_size*=s;
+            }
+            size=total_size;
         }
-        assembly.as_type temp_as=aAssembly.fill_as_type(a,Type,ref,arg,constant,address,np,na,label);
+        assembly.as_type temp_as=aAssembly.fill_as_type(a,Type,ref,arg,constant,address,np,na,label,size,pointing);
         return temp_as;
     }
+
+    public void load(String R,String a,int depth){
+        assembly.as_type temp_as;
+        if(check_array(a)){
+            temp_as=create_as_type(remove_array(a),depth);
+            aAssembly.load("edi",temp_as);
+            if(temp_as.pointing.equals("int")){
+                aAssembly.add_comm("mov",R,"DWORD ptr [edi]",true);
+            }
+            else{
+                aAssembly.add_comm("movzx",R,"BYTE ptr [edi]",true);
+            }
+        }
+        else{
+            temp_as=create_as_type(a,depth);
+            aAssembly.load(R,temp_as);
+        }
+    }
+
+    public void load_addr(String R,String a,int depth){
+        assembly.as_type temp_as;
+        if(check_array(a)){
+            temp_as=create_as_type(remove_array(a),depth);
+            aAssembly.load(R,temp_as);
+        }
+        else{
+            temp_as=create_as_type(a,depth);
+            aAssembly.load_addr(R,temp_as);
+        }
+    }
+
+    public String get_low_register(String R){
+        return String.format("%cl",R.charAt(1));
+    }
+
+    public void store(String R,String a,int depth){
+        assembly.as_type temp_as;
+        if(check_array(a)){
+            temp_as=create_as_type(remove_array(a),depth);
+            aAssembly.load("edi",temp_as);
+            if(temp_as.pointing.equals("int")){
+                aAssembly.add_comm("mov","DWORD ptr [edi]",R,true);
+            }
+            else{
+                aAssembly.add_comm("mov","BYTE ptr [edi]",get_low_register(R),true);
+            }
+        }
+        else{
+            temp_as=create_as_type(a,depth);
+            if(temp_as.Type.equals("int")){
+                aAssembly.store(R,temp_as);
+            }
+            else{
+                aAssembly.store(get_low_register(R),temp_as);
+            }
+        }
+    }
+
     //PROGRAM IN
     @Override
     public void inAProgram(AProgram node){
@@ -300,6 +367,7 @@ public class SemMidCode extends DepthFirstAdapter{
             ids = new ArrayList<String>();
             List<TTId> id_copy = new ArrayList<TTId>(node_f.getTId());
             for(TTId id_e : id_copy){
+                //System.out.printf("arg_name %s\n",id_e.toString());
                 aSymbolTable.insert(id_e.getLine(),id_e.getPos(),id_e.toString().replaceAll("\\s+",""),TypeOfArg,"no",ref,array_sizes,null,false,true);
             }
         }
@@ -395,10 +463,9 @@ public class SemMidCode extends DepthFirstAdapter{
         size=aMiddleCode.get_start_address();
         size=next_4(size);
         String name="";
-        assembly.as_type temp_as;
-        assembly.as_type temp_as2;
         boolean ret=false;
         for(int i=from;i<to;i++){
+            aAssembly.add_comm(String.format("_grace_%d:",i),"","",false);
             aQuad=aMiddleCode.get_quad(i);
             if(aQuad.op.equals("unit")){
                 cur_depth=get_depth_fname(aQuad.x);
@@ -427,21 +494,20 @@ public class SemMidCode extends DepthFirstAdapter{
                 for(int j = par_size-1;j>=0;j--){
                     middlecode.quad q=parameters.get(j);
                     if(q.y.equals("V")){
-                        if(check_array(q.x)){
-                            String ar_in;
-                            ar_in=remove_array(q.x);
-                            temp_as=create_as_type(ar_in,cur_depth);
-                            //TODO
-                        }
-                        temp_as=create_as_type(q.x,cur_depth);
-                        aAssembly.load("eax",temp_as);
+                        load("eax",q.x,cur_depth);
                         aAssembly.add_comm("push","eax","",true);
+                    }
+                    else{
+                        load_addr("esi",q.x,cur_depth);
+                        aAssembly.add_comm("push","esi","",true);
                     }
                 }
                 parameters.clear();
                 call_depth = get_depth_fname(aQuad.z);
                 if(ret==true){
                     ret=false;
+                    load_addr("esi",aQuad.x,cur_depth);
+                    aAssembly.add_comm("push","esi","",true);
                 }else{
                     aAssembly.add_comm("sub","esp","4",true);
                 }
@@ -450,15 +516,97 @@ public class SemMidCode extends DepthFirstAdapter{
                 aAssembly.add_comm("sub","esp",String.format("%s",8+(par_size*4)),true);
             }
             else if(aQuad.op.equals(":=")){
-                temp_as=create_as_type(aQuad.x,cur_depth);
-                temp_as2=create_as_type(aQuad.z,cur_depth);
                 //System.out.printf("type %s %s %s\n",temp_as2.Type,temp_as2.arg,temp_as2.ref);
-                aAssembly.load("eax",temp_as);
-                if(temp_as2.Type.equals("char")){
-                    aAssembly.store("al",temp_as2);
-                }else{
-                    aAssembly.store("eax",temp_as2);
+                load("eax",aQuad.x,cur_depth);
+                store("eax",aQuad.z,cur_depth);
+            }
+            else if(aQuad.op.equals("array")){
+                assembly.as_type a_type = create_as_type(aQuad.x,cur_depth);
+                load("eax",aQuad.y,cur_depth);
+                //aAssembly.add_comm("mov","eax",String.format("%s",a_type.size),true);
+                //aAssembly.add_comm("sub","eax","ebx",true);
+                if(a_type.Type.equals("int")){
+                    aAssembly.add_comm("mov","ecx","4",true);
                 }
+                else{
+                    aAssembly.add_comm("mov","ecx","1",true);
+                }
+                aAssembly.add_comm("imul","ecx","",true);
+                //System.out.printf("type %s %s %s %s %d\n",a_type.a,a_type.Type,a_type.arg,a_type.ref,a_type.address);
+                load_addr("ecx",aQuad.x,cur_depth);
+                aAssembly.add_comm("add","ecx","eax",true);
+                store("ecx",aQuad.z,cur_depth);
+            }
+            else if(aQuad.op.equals("+")){
+                load("eax",aQuad.x,cur_depth);
+                load("edx",aQuad.y,cur_depth);
+                aAssembly.add_comm("add","eax","edx",true);
+                store("eax",aQuad.z,cur_depth);
+            }
+            else if(aQuad.op.equals("-")){
+                load("eax",aQuad.x,cur_depth);
+                load("edx",aQuad.y,cur_depth);
+                aAssembly.add_comm("sub","eax","edx",true);
+                store("eax",aQuad.z,cur_depth);
+            }
+            else if(aQuad.op.equals("*")){
+                load("eax",aQuad.x,cur_depth);
+                load("ecx",aQuad.y,cur_depth);
+                aAssembly.add_comm("imul","ecx","",true);
+                store("eax",aQuad.z,cur_depth);
+            }
+            else if(aQuad.op.equals("/")){
+                load("eax",aQuad.x,cur_depth);
+                aAssembly.add_comm("cwd","","",true);
+                load("ecx",aQuad.y,cur_depth);
+                aAssembly.add_comm("idiv","ecx","",true);
+                store("eax",aQuad.z,cur_depth);
+            }
+            else if(aQuad.op.equals("%")){
+                load("eax",aQuad.x,cur_depth);
+                aAssembly.add_comm("cwd","","",true);
+                load("ecx",aQuad.y,cur_depth);
+                aAssembly.add_comm("idiv","ecx","",true);
+                store("edx",aQuad.z,cur_depth);
+            }
+            else if(aQuad.op.equals("jump")){
+                aAssembly.add_comm("jmp",String.format("_grace_%s",aQuad.z),"",true);
+            }
+            else if(aQuad.op.equals("<")){
+                load("eax",aQuad.x,cur_depth);
+                load("edx",aQuad.y,cur_depth);
+                aAssembly.add_comm("cmp","eax","edx",true);
+                aAssembly.add_comm("jl",String.format("_grace_%s",aQuad.z),"",true);
+            }
+            else if(aQuad.op.equals(">")){
+                load("eax",aQuad.x,cur_depth);
+                load("edx",aQuad.y,cur_depth);
+                aAssembly.add_comm("cmp","eax","edx",true);
+                aAssembly.add_comm("jg",String.format("_grace_%s",aQuad.z),"",true);
+            }
+            else if(aQuad.op.equals("<=")){
+                load("eax",aQuad.x,cur_depth);
+                load("edx",aQuad.y,cur_depth);
+                aAssembly.add_comm("cmp","eax","edx",true);
+                aAssembly.add_comm("jle",String.format("_grace_%s",aQuad.z),"",true);
+            }
+            else if(aQuad.op.equals(">=")){
+                load("eax",aQuad.x,cur_depth);
+                load("edx",aQuad.y,cur_depth);
+                aAssembly.add_comm("cmp","eax","edx",true);
+                aAssembly.add_comm("jge",String.format("_grace_%s",aQuad.z),"",true);
+            }
+            else if(aQuad.op.equals("=")){
+                load("eax",aQuad.x,cur_depth);
+                load("edx",aQuad.y,cur_depth);
+                aAssembly.add_comm("cmp","eax","edx",true);
+                aAssembly.add_comm("je",String.format("_grace_%s",aQuad.z),"",true);
+            }
+            else if(aQuad.op.equals("#")){
+                load("eax",aQuad.x,cur_depth);
+                load("edx",aQuad.y,cur_depth);
+                aAssembly.add_comm("cmp","eax","edx",true);
+                aAssembly.add_comm("jne",String.format("_grace_%s",aQuad.z),"",true);
             }
             else if(aQuad.op.equals("ret")){
                 aAssembly.add_comm("jmp",String.format("_end_%s",name),"",true);
@@ -593,7 +741,7 @@ public class SemMidCode extends DepthFirstAdapter{
         if(rightm.array){
             rightplace = String.format("[%s]",rightm.place);
         }
-        W = aMiddleCode.newtemp("int");
+        W = aMiddleCode.newtemp("int","int");
         aMiddleCode.genquad("+",leftplace,rightplace,W);
         info_node temp_mi = new info_node(W,"int",null,null,null,false);
         mi_info_nodes.add(temp_mi);
@@ -628,7 +776,7 @@ public class SemMidCode extends DepthFirstAdapter{
         if(rightm.array){
             rightplace = String.format("[%s]",rightm.place);
         }
-        W = aMiddleCode.newtemp("int");
+        W = aMiddleCode.newtemp("int","int");
         aMiddleCode.genquad("-",leftplace,rightplace,W);
         info_node temp_mi = new info_node(W,"int",null,null,null,false);
         mi_info_nodes.add(temp_mi);
@@ -663,7 +811,7 @@ public class SemMidCode extends DepthFirstAdapter{
         if(rightm.array){
             rightplace = String.format("[%s]",rightm.place);
         }
-        W = aMiddleCode.newtemp("int");
+        W = aMiddleCode.newtemp("int","int");
         aMiddleCode.genquad("*",leftplace,rightplace,W);
         info_node temp_mi = new info_node(W,"int",null,null,null,false);
         mi_info_nodes.add(temp_mi);
@@ -698,7 +846,7 @@ public class SemMidCode extends DepthFirstAdapter{
         if(rightm.array){
             rightplace = String.format("[%s]",rightm.place);
         }
-        W = aMiddleCode.newtemp("int");
+        W = aMiddleCode.newtemp("int","int");
         aMiddleCode.genquad("/",leftplace,rightplace,W);
         info_node temp_mi = new info_node(W,"int",null,null,null,false);
         mi_info_nodes.add(temp_mi);
@@ -733,7 +881,7 @@ public class SemMidCode extends DepthFirstAdapter{
         if(rightm.array){
             rightplace = String.format("[%s]",rightm.place);
         }
-        W = aMiddleCode.newtemp("int");
+        W = aMiddleCode.newtemp("int","int");
         aMiddleCode.genquad("%",leftplace,rightplace,W);
         info_node temp_mi = new info_node(W,"int",null,null,null,false);
         mi_info_nodes.add(temp_mi);
@@ -757,7 +905,7 @@ public class SemMidCode extends DepthFirstAdapter{
         if(rightm.array){
             rightplace = String.format("[%s]",rightm.place);
         }
-        W = aMiddleCode.newtemp("int");
+        W = aMiddleCode.newtemp("int","int");
         aMiddleCode.genquad("+","0",rightplace,W);
         info_node temp_mi = new info_node(W,"int",null,null,null,false);
         mi_info_nodes.add(temp_mi);
@@ -781,7 +929,7 @@ public class SemMidCode extends DepthFirstAdapter{
         if(rightm.array){
             rightplace = String.format("[%s]",rightm.place);
         }
-        W = aMiddleCode.newtemp("int");
+        W = aMiddleCode.newtemp("int","int");
         aMiddleCode.genquad("-","0",rightplace,W);
         info_node temp_mi = new info_node(W,"int",null,null,null,false);
         mi_info_nodes.add(temp_mi);
@@ -843,7 +991,7 @@ public class SemMidCode extends DepthFirstAdapter{
                     if(dims>1){
                         for(int i=0; i < dims-1 ; i++ ){
                             index = mi_info_nodes.remove(pos2remove_m);
-                            W  = aMiddleCode.newtemp("int");
+                            W  = aMiddleCode.newtemp("int","int");
                             int width=aSymbol.array_sizes.get(i+1);
                             for(int j=i+2;j<dims;j++){
                                 width*=aSymbol.array_sizes.get(j);
@@ -858,7 +1006,7 @@ public class SemMidCode extends DepthFirstAdapter{
                             else
                                 tW=W;
                         }
-                        W  = aMiddleCode.newtemp("int");
+                        W  = aMiddleCode.newtemp("int","int");
                         index = mi_info_nodes.remove(pos2remove_m);
                         aMiddleCode.genquad("+",index.place,tW,W);
                         tW=W;
@@ -871,13 +1019,18 @@ public class SemMidCode extends DepthFirstAdapter{
                         }
                         tW=place;
                     }
-                    W = aMiddleCode.newtemp("int");
+                    if(aSymbol.type.equals("char_const"))
+                        W = aMiddleCode.newtemp("int","char");
+                    else if(aSymbol.type.equals("int_const"))
+                        W = aMiddleCode.newtemp("int","int");
+                    else
+                        W = aMiddleCode.newtemp("int",aSymbol.type);
                     aMiddleCode.genquad("array",node.getTId().toString().replaceAll("\\s+",""),tW,W);
                     temp_mi = new info_node(W,"int",null,null,null,true);
                 }else{
                     for(int i=0; i < dims ; i++ ){
                         index = mi_info_nodes.remove(pos2remove_m);
-                        W  = aMiddleCode.newtemp("int");
+                        W  = aMiddleCode.newtemp("int","int");
                         int width=aSymbol.array_sizes.get(i+1);
                         for(int j=i+2;j<dims;j++){
                             width*=aSymbol.array_sizes.get(j);
@@ -892,9 +1045,9 @@ public class SemMidCode extends DepthFirstAdapter{
                         else
                             tW=W;
                     }
-                    W = aMiddleCode.newtemp("int");
+                    W = aMiddleCode.newtemp("int","int");
                     aMiddleCode.genquad("array",node.getTId().toString().replaceAll("\\s+",""),tW,W);
-                    temp_mi = new info_node(W,"int",null,null,null,false);
+                    temp_mi = new info_node(W,"int",null,null,null,true);
                 }
                 mi_info_nodes.add(temp_mi);
             }
@@ -932,7 +1085,7 @@ public class SemMidCode extends DepthFirstAdapter{
                     }
                 }
                 index = mi_info_nodes.remove(pos2remove_m);
-                W = aMiddleCode.newtemp("int");
+                W = aMiddleCode.newtemp("int","int");
                 place=index.place;
                 if(index.array){
                     place=String.format("[%s]",index.place);
@@ -1482,7 +1635,7 @@ public class SemMidCode extends DepthFirstAdapter{
             type_info return_type = new type_info(node.getTId().getLine(),node.getTId().getPos(),node.getTId().toString().replaceAll("\\s+",""),foundSymbol.ret_type,0,0,false);
             type_stack.add(return_type);
             if(!foundSymbol.ret_type.equals("nothing")){
-                W = aMiddleCode.newtemp(foundSymbol.ret_type);
+                W = aMiddleCode.newtemp(foundSymbol.ret_type,foundSymbol.ret_type);
                 aMiddleCode.genquad("par",W,"RET","-");
                 info_node temp_mi = new info_node(W,"stmt",null,null,null,false);
                 mi_info_nodes.add(temp_mi);
