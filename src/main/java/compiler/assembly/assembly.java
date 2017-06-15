@@ -20,6 +20,14 @@ public class assembly{
     }
 
     public ArrayList<assembly_comm> instructions=new ArrayList<assembly_comm>();
+    Map<String,String> data_strings = new HashMap<String,String>();
+    int str_lb=0;
+    public String add_str(String a){
+        String lb=String.format("Str_lb_%d",str_lb);
+        data_strings.put(lb,a);
+        str_lb++;
+        return lb;
+    }
 
     public class as_type{
         String a;
@@ -50,6 +58,32 @@ public class assembly{
     public as_type fill_as_type(String a,String Type,boolean ref,boolean arg,boolean constant,int address,int np,int na,String label,int size,String pointing){
         as_type temp= new as_type(a,Type,ref,arg,constant,address,np,na,label,size,pointing);
         return temp;
+    }
+
+    public int char_to_ascii(String a){
+        if(a.charAt(1)=='\\'){
+            switch (a.charAt(2)) {
+                case 'n':
+                    return '\n';
+                case 't':
+                    return '\t';
+                case 'r':
+                    return '\r';
+                case '0':
+                    return '\0';
+                case '\\':
+                    return '\\';
+                case '\'':
+                    return '\'';
+                case '\"':
+                    return '\"';
+                case 'x':
+                    return Integer.decode(String.format("0%s",a.substring(2)));
+            }
+        }else{
+            return a.charAt(1);
+        }
+        return 0;
     }
 
     public void add_comm(String op,String a,String b,boolean tab){
@@ -96,6 +130,13 @@ public class assembly{
                     writer.printf("%s%s\n",tab,e.op,e.a);
                 }
             }
+            if(str_lb!=0){
+                writer.printf(".data\n");
+            }
+            for(int i=0;i<str_lb;i++){
+                String lb=String.format("Str_lb_%d",i);
+                writer.printf("\t%s: .asciz %s\n",lb,data_strings.get(lb));
+            }
             writer.close();
         }catch (IOException e) {
 
@@ -135,13 +176,12 @@ public class assembly{
                 add_comm("mov",R,as.a,true);
             }
             if(as.Type.equals("char")){
-                add_comm("mov",R,String.format("%s",as.a),true);
+                add_comm("mov",R,String.format("%d",char_to_ascii(as.a)),true);
             }
         }
         else{
             if(as.arg){
                 ac="+";
-                address+=16;
                 if((as.np-as.na)!=0){
                     getAr(as.np,as.na);
                     R1="esi";
@@ -166,7 +206,6 @@ public class assembly{
             }
             else{
                 ac="-";
-                address+=4;
                 if((as.np-as.na)!=0){
                     getAr(as.np,as.na);
                     R1="esi";
@@ -197,13 +236,13 @@ public class assembly{
         int address=as.address;
         if(as.constant){
             if(as.Type.equals("string")){
-                add_comm("lea",R,String.format("OFFSET FLAT:%s",as.label),true);
+                add_comm("mov",R,String.format("OFFSET FLAT:%s",as.label),true);
             }
         }
         else{
             if(as.arg){
                 ac="+";
-                address+=16;
+                //address+=16;
                 if((as.np-as.na)!=0){
                     getAr(as.np,as.na);
                     R1="esi";
@@ -227,7 +266,12 @@ public class assembly{
             }
             else{
                 ac="-";
-                address+=4;
+                //if(as.Type.equals("int")){
+                    //address+=4;
+                //}
+                //else{
+                    //address+=1;
+                //}
                 if((as.np-as.na)!=0){
                     getAr(as.np,as.na);
                     R1="esi";
@@ -263,7 +307,7 @@ public class assembly{
         else{
             if(as.arg){
                 ac="+";
-                address+=16;
+                //address+=16;
                 if((as.np-as.na)!=0){
                     getAr(as.np,as.na);
                     R1="esi";
@@ -288,7 +332,12 @@ public class assembly{
             }
             else{
                 ac="-";
-                address+=4;
+                //if(as.Type.equals("int")){
+                    //address+=4;
+                //}
+                //else{
+                    //address+=1;
+                //}
                 if((as.np-as.na)!=0){
                      //System.out.printf("%d ,%d\n",as.np,as.na);
                     getAr(as.np,as.na);

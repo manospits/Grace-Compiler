@@ -179,13 +179,16 @@ public class SemMidCode extends DepthFirstAdapter{
         if(name.equals("$$")){
             ref=true;
             arg=true;
-            address=-4;
+            address=12;
             Type=ret_type;
         }
         else if(check_const(name)){
             constant=true;
             Type = get_const_type(name);
-            //TODO FILL STRING LABELS
+            if(Type.equals("string")){
+                System.out.printf("%s\n",name);
+                label=aAssembly.add_str(name);
+            }
         }
         else if(check_temp(name)){
            middlecode.var_info temp=aMiddleCode.get_var_info(name);
@@ -279,7 +282,6 @@ public class SemMidCode extends DepthFirstAdapter{
     @Override
     public void outAProgram(AProgram node){
         aMiddleCode.print_quads();
-        //aAssembly.print_comms();
         aAssembly.create_assembly_file(String.format("%s.s",Main.filename));
     }
 
@@ -525,7 +527,7 @@ public class SemMidCode extends DepthFirstAdapter{
                 }
                 aAssembly.updateAl(cur_depth,call_depth);
                 aAssembly.add_comm("call",aQuad.z,"",true);
-                aAssembly.add_comm("sub","esp",String.format("%s",8+(par_size*4)),true);
+                aAssembly.add_comm("add","esp",String.format("%s",8+(par_size*4)),true);
             }
             else if(aQuad.op.equals(":=")){
                 //System.out.printf("type %s %s %s\n",temp_as2.Type,temp_as2.arg,temp_as2.ref);
@@ -1097,7 +1099,7 @@ public class SemMidCode extends DepthFirstAdapter{
                     }
                 }
                 index = mi_info_nodes.remove(pos2remove_m);
-                W = aMiddleCode.newtemp("int","int");
+                W = aMiddleCode.newtemp("int","char");
                 place=index.place;
                 if(index.array){
                     place=String.format("[%s]",index.place);

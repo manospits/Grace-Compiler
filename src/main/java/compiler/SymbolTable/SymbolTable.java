@@ -91,7 +91,7 @@ public class SymbolTable {
         //System.out.printf("curDepth: %d\n",curDepth);
         depths.add(-1);
         local_addresses.add(0);
-        arg_addresses.add(0);
+        arg_addresses.add(16);
     }
 
     public int insert(int line, int pos,String name,String type,String ret_type,boolean ref,ArrayList<Integer> array_sizes,ArrayList<argument> arg_types,boolean declared,boolean arg){
@@ -208,17 +208,19 @@ public class SymbolTable {
             error=String.format("expected ref in array parameter");
             print_error(line,pos,error);
         }
-        int address=0,next_address=0;
+        int address=0;
         if(!type.equals("fun") ){
             if(!arg){
                 address=local_addresses.get(local_addresses.size()-1);
                 if(array_sizes.size()==0){
                     if(type.equals("int")){
                         address=next_4(address);
-                        local_addresses.set(local_addresses.size()-1,address+4);
+                        address+=4;
+                        local_addresses.set(local_addresses.size()-1,address);
                     }
                     else{
-                        local_addresses.set(local_addresses.size()-1,address+1);
+                        address+=1;
+                        local_addresses.set(local_addresses.size()-1,address);
                     }
                 }
                 else{
@@ -228,14 +230,15 @@ public class SymbolTable {
                     }
                     if(type.equals("int")){
                         address=next_4(address);
-                        next_address=address+(total_size*4);
-                        address=next_address-4;
-                        local_addresses.set(local_addresses.size()-1,next_address);
+                        address=address+(total_size*4);
+                        address=address;
+                        local_addresses.set(local_addresses.size()-1,address);
                     }
                     else{
-                        next_address=address+(total_size*1);
-                        address=next_address-1;
-                        local_addresses.set(local_addresses.size()-1,next_address);
+                        address+=1;
+                        address=address+(total_size*1);
+                        address=address;
+                        local_addresses.set(local_addresses.size()-1,address);
                     }
                 }
             }

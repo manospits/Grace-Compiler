@@ -104,7 +104,7 @@ public class middlecode{
             address=next_4(address);
             start_address=address+4;
         }
-        temp_var=new var_info(Type,address,pointing);
+        temp_var=new var_info(Type,start_address,pointing);
         vars.add(temp_var);
         return Name;
     }
