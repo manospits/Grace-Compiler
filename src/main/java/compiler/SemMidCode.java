@@ -677,7 +677,6 @@ public class SemMidCode extends DepthFirstAdapter{
             arg = new argument(TypeOfArg,ids,array_sizes,ref);
             temp_args.add(arg);
         }
-        int error;
         aSymbolTable.insert(node.getTId().getLine(),node.getTId().getPos(),fun_name,Type,ret_type,false,null,temp_args,false,false);
     }
 
