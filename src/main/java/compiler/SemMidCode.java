@@ -1082,7 +1082,7 @@ public class SemMidCode extends DepthFirstAdapter{
             aSymbolTable.print_error(node.getTString().getLine(),node.getTString().getPos(),error);
         }
         info_node index;
-        int size=node.getTString().toString().trim().length()+1;
+        int size=node.getTString().toString().trim().length()-2;
         if(dims!=0){
             for(int i=0; i < dims ; i++ ){
                 array_index=type_stack.remove(pos2remove);
@@ -1092,7 +1092,7 @@ public class SemMidCode extends DepthFirstAdapter{
                 }
                 if(array_index.Type.equals("int_const") && isInteger(array_index.name)){
                     int value=Integer.parseInt(array_index.name);
-                    if(value >= size){
+                    if(value > size){
                         error = String.format("accessing dimension (%d) with index (%d) bigger than array size (%d) ",dims,value,size);
                         aSymbolTable.print_error(array_index.line,array_index.pos,error);
                     }

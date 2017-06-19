@@ -19,7 +19,7 @@
     .global strcpy_0
     .global strcat_0
 
-    
+
 abs_0:
     push ebp
     mov ebp, esp
@@ -34,6 +34,31 @@ abs_0:
     mov esp, ebp
     pop ebp
     ret
+
+ord_0:
+    push ebp
+    mov ebp, esp
+
+    movzx eax, BYTE PTR [ebp + 16]
+    mov esi, dword ptr [ebp + 12]
+    mov  dword ptr [esi], eax
+
+    mov esp, ebp
+    pop ebp
+    ret
+
+chr_0:
+    push ebp
+    mov ebp, esp
+
+    mov eax, dword PTR [ebp + 16]
+    mov esi, dword ptr [ebp + 12]
+    mov  BYTE ptr [esi], al
+
+    mov esp, ebp
+    pop ebp
+    ret
+
 
 geti_0:
     push ebp
