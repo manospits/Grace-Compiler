@@ -8,8 +8,9 @@ import java.io.*;
 class Main{
     public static String filename;
     public static String stripGrace(String a){
-        a=a.substring(0,a.length()-6);
-        return a;
+        String str;
+        str=a.substring(0, a.lastIndexOf('.'));
+        return str;
     }
     public static void main(String[] arguments){
         try{

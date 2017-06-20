@@ -186,7 +186,7 @@ public class SemMidCode extends DepthFirstAdapter{
             constant=true;
             Type = get_const_type(name);
             if(Type.equals("string")){
-                System.out.printf("%s\n",name);
+                //System.out.printf("%s\n",name);
                 label=aAssembly.add_str(name);
             }
         }
@@ -453,6 +453,7 @@ public class SemMidCode extends DepthFirstAdapter{
         String m_op;
         int from,to=aMiddleCode.nextquad();
         from=aMiddleCode.last_unit_pos(to);
+        aMiddleCode.optimize_unit(from);
         if(from==0){
             aAssembly.add_comm(".intel_syntax","noprefix","",false);
             aAssembly.add_comm(".text","","",false);
