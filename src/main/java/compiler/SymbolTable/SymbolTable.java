@@ -64,7 +64,7 @@ public class SymbolTable {
 
     public void print_error(int line,int pos ,String error){
         System.out.printf("[ERROR] (l:%d,p:%d) \t: %s\n",line,pos,error);
-        System.exit(0);
+        System.exit(1);
     }
 
     class record {

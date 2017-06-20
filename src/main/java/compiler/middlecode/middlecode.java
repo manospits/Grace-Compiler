@@ -74,6 +74,7 @@ public class middlecode{
     ArrayList<var_info> vars = new ArrayList <var_info>();
     Map<String,range> function_vars = new HashMap<String,range>();
     Map<String,String> vars_value = new HashMap<String,String>();
+    Map<String,String> vars_value_reverse = new HashMap<String,String>();
 
     public var_info get_var_info(String var){
         int place=Integer.parseInt(var.substring(1,var.length()));
@@ -223,6 +224,18 @@ public class middlecode{
             return false;
     }
 
+    public static boolean isInteger(String s, int radix) {
+        if(s.isEmpty()) return false;
+        for(int i = 0; i < s.length(); i++) {
+            if(i == 0 && s.charAt(i) == '-') {
+                if(s.length() == 1) return false;
+                else continue;
+            }
+            if(Character.digit(s.charAt(i),radix) < 0) return false;
+        }
+        return true;
+    }
+
     public ArrayList<quad> optimize_unit( int start ){
         SortedSet<Integer> leaders=new TreeSet<Integer>();
         ArrayList<quad> op_quads=new ArrayList<quad>();
@@ -259,20 +272,20 @@ public class middlecode{
         Iterator<Integer> prev;
         range b;
         block bl;
-        while(it.hasNext()){
-            int from,to;
-            from=it.next();
-            System.out.printf("%d,",from);
-        }
-            System.out.printf("\n");
-        it = leaders.iterator();
+        //while(it.hasNext()){
+            //int from,to;
+            //from=it.next();
+            //System.out.printf("%d,",from);
+        //}
+            //System.out.printf("\n");
+        //it = leaders.iterator();
         int current,previous;
         if(it.hasNext()){
             previous=it.next();
             while(true){
                 int from,to;
                 from=previous;
-                System.out.printf("%d,",from);
+                //System.out.printf("%d,",from);
                 if(it.hasNext()){
                     current = it.next();
                     to=current-1;
@@ -291,8 +304,8 @@ public class middlecode{
                 previous=current;
             }
         }
-        System.out.printf("\n");
-        System.out.printf("unit %d\n",start);
+        //System.out.printf("\n");
+        //System.out.printf("unit %d\n",start);
         int cur_block=0;
         for(block m : blocks){
             quad lastquad=quads.get(m.r.to);
@@ -323,45 +336,94 @@ public class middlecode{
         }
         cur_block=0;
         for(block m : blocks){
-            System.out.printf("block %d --- from  %d to %d\n",cur_block,m.r.from,m.r.to);
-            System.out.printf("\tincoming: ");
-            for(int in:m.incoming){
-                System.out.printf("%d ",in);
-            }
-            System.out.printf("\n");
-            System.out.printf("\toutcoming: ");
-            for(int out:m.outcoming){
-                System.out.printf("%d ",out);
-            }
-            System.out.printf("\n");
+            //System.out.printf("block %d --- from  %d to %d\n",cur_block,m.r.from,m.r.to);
+            //System.out.printf("\tincoming: ");
+            //for(int in:m.incoming){
+                //System.out.printf("%d ",in);
+            //}
+            //System.out.printf("\n");
+            //System.out.printf("\toutcoming: ");
+            //for(int out:m.outcoming){
+                //System.out.printf("%d ",out);
+            //}
+            //System.out.printf("\n");
             cur_block++;
-            String x,y,z;
+            String op,x,y,z;
             for(int j=m.r.from;j<=m.r.to;j++){
+                op=quads.get(j).op;
                 x=quads.get(j).x;
                 y=quads.get(j).y;
                 z=quads.get(j).z;
+                //copy propagation
                 if(x_is_editable(quads.get(j)) && vars_value.get(x)!=null){
                     quads.get(j).x=vars_value.get(x);
+                    x=quads.get(j).x;
                 }
                 if(y_is_editable(quads.get(j)) && vars_value.get(y)!=null){
                     quads.get(j).y=vars_value.get(y);
+                    y=quads.get(j).y;
                 }
-                if(op_assigns_z(quads.get(j)) && vars_value.get(z)!=null){
-                    vars_value.remove(z);
+                if(op_assigns_z(quads.get(j)) && (vars_value.get(z)!=null ||vars_value_reverse.get(z)!=null)){
+                    if(vars_value.get(z)!=null){
+                        vars_value_reverse.remove(vars_value.get(z));
+                        vars_value.remove(z);
+                    }else{
+                        vars_value.remove(vars_value_reverse.get(z));
+                        vars_value_reverse.remove(z);
+                    }
                 }
                 if(op_assigns_x(quads.get(j)) && vars_value.get(x)!=null){
-                    vars_value.remove(x);
+                    if(vars_value.get(x)!=null){
+                        vars_value_reverse.remove(vars_value.get(x));
+                        vars_value.remove(x);
+                    }else{
+                        vars_value.remove(vars_value_reverse.get(x));
+                        vars_value_reverse.remove(x);
+                    }
+
+                }
+                //algebraic simplification
+                //update quad info variables
+                if(op_is_op(quads.get(j))){
+                    int xi,yi; //java ints are always 32 bit
+                    if(isInteger(x,10) && isInteger(y,10)){
+                        xi = Integer.parseInt(x);
+                        yi = Integer.parseInt(y);
+                        quads.get(j).op=":=";
+                        if(op.equals("+")){
+                            quads.get(j).x=String.format("%d",xi+yi);
+                            quads.get(j).y="-";
+                        }
+                        else if(op.equals("-")){
+                            quads.get(j).x=String.format("%d",xi-yi);
+                            quads.get(j).y="-";
+                        }
+                        else if(op.equals("*")){
+                            quads.get(j).x=String.format("%d",xi*yi);
+                            quads.get(j).y="-";
+                        }
+                        else if(op.equals("/")){
+                            quads.get(j).x=String.format("%d",xi/yi);
+                            quads.get(j).y="-";
+                        }
+                        else if(op.equals("%")){
+                            quads.get(j).x=String.format("%d",xi%yi);
+                            quads.get(j).y="-";
+                        }
+                    }
                 }
                 if(quads.get(j).op.equals(":=")){
                     x=quads.get(j).x;
                     z=quads.get(j).z;
                     vars_value.put(z,x);
+                    vars_value_reverse.put(x,z);
                 }
                 //System.out.printf("%d:\t%s",j,String.format("%s,%s,%s,%s\n",quads.get(j).op,quads.get(j).x,quads.get(j).y,quads.get(j).z));
             }
             vars_value.clear();
+            vars_value_reverse.clear();
         }
-        System.out.printf("end unit %d\n",start);
+        //System.out.printf("end unit %d\n",start);
         return op_quads;
     }
 }

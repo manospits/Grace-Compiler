@@ -281,7 +281,7 @@ public class SemMidCode extends DepthFirstAdapter{
     //PROGRAM OUT
     @Override
     public void outAProgram(AProgram node){
-        aMiddleCode.print_quads();
+        //aMiddleCode.print_quads();
         aAssembly.create_assembly_file(String.format("%s.s",Main.filename));
     }
 
@@ -453,7 +453,8 @@ public class SemMidCode extends DepthFirstAdapter{
         String m_op;
         int from,to=aMiddleCode.nextquad();
         from=aMiddleCode.last_unit_pos(to);
-        aMiddleCode.optimize_unit(from);
+        if(Main.optimize)
+            aMiddleCode.optimize_unit(from);
         if(from==0){
             aAssembly.add_comm(".intel_syntax","noprefix","",false);
             aAssembly.add_comm(".text","","",false);
@@ -572,14 +573,14 @@ public class SemMidCode extends DepthFirstAdapter{
             }
             else if(aQuad.op.equals("/")){
                 load("eax",aQuad.x,cur_depth,ret_type);
-                aAssembly.add_comm("cwd","","",true);
+                aAssembly.add_comm("cdq","","",true);
                 load("ecx",aQuad.y,cur_depth,ret_type);
                 aAssembly.add_comm("idiv","ecx","",true);
                 store("eax",aQuad.z,cur_depth,ret_type);
             }
             else if(aQuad.op.equals("%")){
                 load("eax",aQuad.x,cur_depth,ret_type);
-                aAssembly.add_comm("cwd","","",true);
+                aAssembly.add_comm("cdq","","",true);
                 load("ecx",aQuad.y,cur_depth,ret_type);
                 aAssembly.add_comm("idiv","ecx","",true);
                 store("edx",aQuad.z,cur_depth,ret_type);
