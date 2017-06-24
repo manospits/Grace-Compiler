@@ -5,8 +5,7 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.*;
 
-public class SemMidCode extends DepthFirstAdapter{
-    int spaces=0;
+public class CompilerVisitor extends DepthFirstAdapter{
     SymbolTable aSymbolTable = new SymbolTable();
     ArrayList<argument> temp_args;
     middlecode aMiddleCode = new middlecode();
@@ -15,15 +14,15 @@ public class SemMidCode extends DepthFirstAdapter{
     int string_dim=1;
     Pattern p = Pattern.compile("[a-zA-Z_\\d]_(\\d+)$"); //used for getting depth from a function name
 
-
     class type_info{
         int line,pos;
         String name;
         String Type;
         int array_max_dim;
         int array_cur_dim;
+        ArrayList<Integer> array_sizes;
         boolean string_literal;
-        type_info(int line,int pos, String name,String Type,int array_max_dim,int array_cur_dim,boolean string_literal){
+        type_info(int line,int pos, String name,String Type,int array_max_dim,int array_cur_dim,boolean string_literal,ArrayList<Integer> array_sizes){
             this.line=line;
             this.pos=pos;
             this.name=name;
@@ -31,12 +30,18 @@ public class SemMidCode extends DepthFirstAdapter{
             this.array_max_dim=array_max_dim;
             this.array_cur_dim=array_cur_dim;
             this.string_literal=string_literal;
+            if(array_sizes==null){
+                this.array_sizes=new ArrayList<Integer>();
+            }
+            else{
+                this.array_sizes=new ArrayList<Integer>(array_sizes);
+            }
         }
     }
 
-    type_info int_type  = new type_info(0,0,"int","int",0,0,false);
-    type_info char_type = new type_info(0,0,"char","char",0,0,false);
-    type_info bool_type = new type_info(0,0,"bool","bool",0,0,false);
+    type_info int_type  = new type_info(0,0,"int","int",0,0,false,null);
+    type_info char_type = new type_info(0,0,"char","char",0,0,false,null);
+    type_info bool_type = new type_info(0,0,"bool","bool",0,0,false,null);
 
     class fun_name_type{
         String name;
@@ -281,7 +286,7 @@ public class SemMidCode extends DepthFirstAdapter{
     //PROGRAM OUT
     @Override
     public void outAProgram(AProgram node){
-        aMiddleCode.print_quads();
+        //aMiddleCode.print_quads(); // uncomment if you want to print intermediate code
         aAssembly.create_assembly_file(String.format("%s.s",Main.filename));
     }
 
@@ -706,12 +711,11 @@ public class SemMidCode extends DepthFirstAdapter{
 
     //EXPR
 
-    //EX
-    //PR CONST
+    //EXPR CONST
     @Override
     public void inAConstExpr(AConstExpr node)
     {
-        type_info temp = new type_info(node.getTNumber().getLine(),node.getTNumber().getPos(),node.getTNumber().toString().trim(),"int_const",0,0,false);
+        type_info temp = new type_info(node.getTNumber().getLine(),node.getTNumber().getPos(),node.getTNumber().toString().trim(),"int_const",0,0,false,null);
         info_node temp_mi = new info_node(node.getTNumber().toString().trim(),"int",null,null,null,false);
         type_stack.add(temp);
         mi_info_nodes.add(temp_mi);
@@ -721,7 +725,7 @@ public class SemMidCode extends DepthFirstAdapter{
     @Override
     public void inACharExpr(ACharExpr node)
     {
-        type_info temp = new type_info(node.getTCharCon().getLine(),node.getTCharCon().getPos(),node.getTCharCon().toString().trim(),"char_const",0,0,false);
+        type_info temp = new type_info(node.getTCharCon().getLine(),node.getTCharCon().getPos(),node.getTCharCon().toString().trim(),"char_const",0,0,false,null);
         info_node temp_mi = new info_node(node.getTCharCon().toString().trim(),"char",null,null,null,false);
         type_stack.add(temp);
         mi_info_nodes.add(temp_mi);
@@ -744,7 +748,7 @@ public class SemMidCode extends DepthFirstAdapter{
                 aSymbolTable.print_error(right.line,right.pos,error);
             }
         }
-        temp = new type_info(right.line,right.pos,right.name,"int_const",0,0,false);
+        temp = new type_info(right.line,right.pos,right.name,"int_const",0,0,false,null);
         type_stack.add(temp);
         info_node leftm,rightm;
         rightm = mi_info_nodes.remove(mi_info_nodes.size()-1);
@@ -779,7 +783,7 @@ public class SemMidCode extends DepthFirstAdapter{
                 aSymbolTable.print_error(right.line,right.pos,error);
             }
         }
-        temp = new type_info(right.line,right.pos,right.name,"int_const",0,0,false);
+        temp = new type_info(right.line,right.pos,right.name,"int_const",0,0,false,null);
         type_stack.add(temp);
         info_node leftm,rightm;
         rightm = mi_info_nodes.remove(mi_info_nodes.size()-1);
@@ -814,7 +818,7 @@ public class SemMidCode extends DepthFirstAdapter{
                 aSymbolTable.print_error(right.line,right.pos,error);
             }
         }
-        temp = new type_info(right.line,right.pos,right.name,"int_const",0,0,false);
+        temp = new type_info(right.line,right.pos,right.name,"int_const",0,0,false,null);
         type_stack.add(temp);
         info_node leftm,rightm;
         rightm = mi_info_nodes.remove(mi_info_nodes.size()-1);
@@ -849,7 +853,7 @@ public class SemMidCode extends DepthFirstAdapter{
                 aSymbolTable.print_error(right.line,right.pos,error);
             }
         }
-        temp = new type_info(right.line,right.pos,right.name,"int_const",0,0,false);
+        temp = new type_info(right.line,right.pos,right.name,"int_const",0,0,false,null);
         type_stack.add(temp);
         info_node leftm,rightm;
         rightm = mi_info_nodes.remove(mi_info_nodes.size()-1);
@@ -884,7 +888,7 @@ public class SemMidCode extends DepthFirstAdapter{
                 aSymbolTable.print_error(right.line,right.pos,error);
             }
         }
-        temp = new type_info(right.line,right.pos,right.name,"int_const",0,0,false);
+        temp = new type_info(right.line,right.pos,right.name,"int_const",0,0,false,null);
         type_stack.add(temp);
         info_node leftm,rightm;
         rightm = mi_info_nodes.remove(mi_info_nodes.size()-1);
@@ -912,7 +916,7 @@ public class SemMidCode extends DepthFirstAdapter{
             error = String.format("%s (%d) <%s> (%d) is not accepted in \"+\" (infix) operation",right.name,right.array_cur_dim,right.Type,right.array_max_dim);
             aSymbolTable.print_error(right.line,right.pos,error);
         }
-        temp = new type_info(right.line,right.pos,right.name,"int_const",0,0,false);
+        temp = new type_info(right.line,right.pos,right.name,"int_const",0,0,false,null);
         type_stack.add(temp);
         info_node leftm,rightm;
         rightm = mi_info_nodes.remove(mi_info_nodes.size()-1);
@@ -936,7 +940,7 @@ public class SemMidCode extends DepthFirstAdapter{
             error = String.format("%s (%d) <%s> (%d) is not accepted in \"-\" (infix) operation",right.name,right.array_cur_dim,right.Type,right.array_max_dim);
             aSymbolTable.print_error(right.line,right.pos,error);
         }
-        temp = new type_info(right.line,right.pos,right.name,"int_const",0,0,false);
+        temp = new type_info(right.line,right.pos,right.name,"int_const",0,0,false,null);
         type_stack.add(temp);
         info_node leftm,rightm;
         rightm = mi_info_nodes.remove(mi_info_nodes.size()-1);
@@ -985,7 +989,7 @@ public class SemMidCode extends DepthFirstAdapter{
             }
         }
         if(aSymbol!= null){
-            type_info temp = new type_info(node.getTId().getLine(),node.getTId().getPos(),node.getTId().toString().trim(),aSymbol.type,aSymbol.array_sizes.size(),dims,false);
+            type_info temp = new type_info(node.getTId().getLine(),node.getTId().getPos(),node.getTId().toString().trim(),aSymbol.type,aSymbol.array_sizes.size(),dims,false,aSymbol.array_sizes);
             type_stack.add(temp);
             info_node temp_mi;
             String place;
@@ -1114,7 +1118,9 @@ public class SemMidCode extends DepthFirstAdapter{
             temp_mi = new info_node(node.getTString().toString().trim(),"char",null,null,null,false);
             mi_info_nodes.add(temp_mi);
         }
-        type_info temp = new type_info(node.getTString().getLine(),node.getTString().getPos(),node.getTString().toString().trim(),"char",string_dim,dims,true);
+        ArrayList<Integer> array_sizes=new ArrayList<Integer>();
+        array_sizes.add(size);
+        type_info temp = new type_info(node.getTString().getLine(),node.getTString().getPos(),node.getTString().toString().trim(),"char",string_dim,dims,true,array_sizes);
         type_stack.add(temp);
     }
 
@@ -1146,7 +1152,7 @@ public class SemMidCode extends DepthFirstAdapter{
                 aSymbolTable.print_error(left.line,left.pos,error);
             }
         }
-        temp = new type_info(right.line,right.pos,right.name,"bool",0,0,false);
+        temp = new type_info(right.line,right.pos,right.name,"bool",0,0,false,null);
         type_stack.add(temp);
         info_node leftm,rightm;
         rightm = mi_info_nodes.remove(mi_info_nodes.size()-1);
@@ -1192,7 +1198,7 @@ public class SemMidCode extends DepthFirstAdapter{
                 aSymbolTable.print_error(left.line,left.pos,error);
             }
         }
-        temp = new type_info(right.line,right.pos,right.name,"bool",0,0,false);
+        temp = new type_info(right.line,right.pos,right.name,"bool",0,0,false,null);
         type_stack.add(temp);
         info_node leftm,rightm;
         rightm = mi_info_nodes.remove(mi_info_nodes.size()-1);
@@ -1238,7 +1244,7 @@ public class SemMidCode extends DepthFirstAdapter{
                 aSymbolTable.print_error(left.line,left.pos,error);
             }
         }
-        temp = new type_info(right.line,right.pos,right.name,"bool",0,0,false);
+        temp = new type_info(right.line,right.pos,right.name,"bool",0,0,false,null);
         type_stack.add(temp);
         info_node leftm,rightm;
         rightm = mi_info_nodes.remove(mi_info_nodes.size()-1);
@@ -1284,7 +1290,7 @@ public class SemMidCode extends DepthFirstAdapter{
                 aSymbolTable.print_error(left.line,left.pos,error);
             }
         }
-        temp = new type_info(right.line,right.pos,right.name,"bool",0,0,false);
+        temp = new type_info(right.line,right.pos,right.name,"bool",0,0,false,null);
         type_stack.add(temp);
         info_node leftm,rightm;
         rightm = mi_info_nodes.remove(mi_info_nodes.size()-1);
@@ -1330,7 +1336,7 @@ public class SemMidCode extends DepthFirstAdapter{
                 aSymbolTable.print_error(left.line,left.pos,error);
             }
         }
-        temp = new type_info(right.line,right.pos,right.name,"bool",0,0,false);
+        temp = new type_info(right.line,right.pos,right.name,"bool",0,0,false,null);
         type_stack.add(temp);
         info_node leftm,rightm;
         rightm = mi_info_nodes.remove(mi_info_nodes.size()-1);
@@ -1376,7 +1382,7 @@ public class SemMidCode extends DepthFirstAdapter{
                 aSymbolTable.print_error(left.line,left.pos,error);
             }
         }
-        temp = new type_info(right.line,right.pos,right.name,"bool",0,0,false);
+        temp = new type_info(right.line,right.pos,right.name,"bool",0,0,false,null);
         type_stack.add(temp);
         info_node leftm,rightm;
         rightm = mi_info_nodes.remove(mi_info_nodes.size()-1);
@@ -1613,7 +1619,7 @@ public class SemMidCode extends DepthFirstAdapter{
                 e.apply(this);
                 arg = type_stack.remove(type_stack.size()-1);
                 temp = foundSymbol.arg_types.get(arg_index);
-                argf = new type_info(0,0,temp.Type,temp.Type,temp.array_sizes.size(),0,false);
+                argf = new type_info(0,0,temp.Type,temp.Type,temp.array_sizes.size(),0,false,null);
                 if(temp.ref && arg.Type.equals("int_const")){
                     error = String.format("expected <%s> (%d) ,found \"%s\" <%s> (%d) in argument (%d) of function \"%s\"",argf.Type,argf.array_max_dim-argf.array_cur_dim,arg.name,arg.Type,arg.array_max_dim-arg.array_cur_dim,i+1,foundSymbol.name);
                     aSymbolTable.print_error(arg.line,arg.pos,error);
@@ -1625,6 +1631,16 @@ public class SemMidCode extends DepthFirstAdapter{
                 if(!equiv(arg,argf)){
                     error = String.format("expected <%s> (%d) ,found \"%s\" <%s> (%d) in argument (%d) of function \"%s\"",argf.Type,argf.array_max_dim-argf.array_cur_dim,arg.name,arg.Type,arg.array_max_dim-arg.array_cur_dim,i+1,foundSymbol.name);
                     aSymbolTable.print_error(arg.line,arg.pos,error);
+                }
+                else{
+                    if(arg.array_max_dim-arg.array_cur_dim!=0){
+                        for(int j=0;j<temp.array_sizes.size();j++){
+                            if(arg.array_sizes.get(j+arg.array_cur_dim)>temp.array_sizes.get(j) && temp.array_sizes.get(j)!=-1){
+                                error = String.format("array size %d (%d) is bigger than %d (%d) of array found in argument (%d) of function \"%s\"",arg.array_sizes.get(j+arg.array_cur_dim),j+arg.array_cur_dim+1,temp.array_sizes.get(j),j+1,i+1,foundSymbol.name);
+                                aSymbolTable.print_error(arg.line,arg.pos,error);
+                            }
+                        }
+                    }
                 }
                 //middlecode start
                 info_node expr;
@@ -1647,7 +1663,7 @@ public class SemMidCode extends DepthFirstAdapter{
                 }
                 i++;
             }
-            type_info return_type = new type_info(node.getTId().getLine(),node.getTId().getPos(),node.getTId().toString().trim(),foundSymbol.ret_type,0,0,false);
+            type_info return_type = new type_info(node.getTId().getLine(),node.getTId().getPos(),node.getTId().toString().trim(),foundSymbol.ret_type,0,0,false,null);
             type_stack.add(return_type);
             if(!foundSymbol.ret_type.equals("nothing")){
                 W = aMiddleCode.newtemp(foundSymbol.ret_type,foundSymbol.ret_type);

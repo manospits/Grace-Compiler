@@ -473,8 +473,8 @@ public class middlecode{
                         }
                     }
                     z_temp=new operand_number(z,j);
-                    System.out.printf("%d: %s",j,String.format("%s,%s,%s,%s\n",op,x,y,z));
-                    System.out.printf("%s,%s %d, %s %d\n",op,x_temp.operand,x_temp.number,y_temp.operand,y_temp.number);
+                    //System.out.printf("%d: %s",j,String.format("%s,%s,%s,%s\n",op,x,y,z));
+                    //System.out.printf("%s,%s %d, %s %d\n",op,x_temp.operand,x_temp.number,y_temp.operand,y_temp.number);
                     temp_rhs=new rhs(op,x_temp,y_temp);
                     if(rhs_hash.get(temp_rhs)!=null){
                         z_temp_rhs=rhs_hash.get(temp_rhs);
