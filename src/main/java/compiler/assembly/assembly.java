@@ -153,7 +153,7 @@ public class assembly{
         else{
             int diff = p - x;
             add_comm("mov","esi","DWORD ptr [ ebp + 8 ]",true);
-            for(int i=1;i<diff+1;i++){
+            for(int i=1;i<diff;i++){
                 add_comm("mov","esi","DWORD ptr [ esi + 8 ]",true);
             }
             add_comm("push","DWORD ptr [ esi + 8 ]","",true);

@@ -1,17 +1,4 @@
 "Grace" Language Compiler Project for Compilers Course in DIT at UOA 2017
-  -part 2 : AST, semantic analysis and middle code generation
-
-# Implementation info
-   -For the symbol table, the third implementation was used 
-    (hashtable of ids leading to a stack with lists of the corresponding id ++ stack with depths)
-
-   -Access to expressions, statements, etc for the semantic analysis has been implemented with a stack,
-    e.g. when a const node is visited there is a push action, when an addition node is visited there
-    are two pop actions two get the left and right expressions and one push action to put the result for
-    the above nodes to get.
-
-   -Middle code is generated during the semantic analysis but, in case of a semantic error a message
-    is printed and execution stops.
 
 # Instructions
 
@@ -27,9 +14,11 @@
 
    mvn clean
 
-## Run with  ( prints error messages, and middlecode  )
-   java -jar target/compiler-1.0-SNAPSHOT.jar <grace program>
+## Run with  ( prints error messages, creates <grace_program>.s, -O for optimize)
+   java -jar target/compiler-1.0-SNAPSHOT.jar <grace_program>.grc/grace [-O]
 
-## Print all middlecodes in examples folder in testing/example_middlecodes/
-   execute script in ./testing/print_mics.sh
+## create executable with script and run it
+    grccomp <grace_program>.grc/grace lib.s
+    .\<grace_program>
+
 
