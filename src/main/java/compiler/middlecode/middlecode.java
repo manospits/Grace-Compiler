@@ -294,6 +294,13 @@ public class middlecode{
     Map <rhs,operand_number> rhs_hash = new HashMap< rhs, operand_number >();
     Map <String,operand_number> vars_versions = new HashMap <String,operand_number>();
 
+    public boolean  check_array(String a){
+        if(a.charAt(0)=='[' && a.charAt(a.length()-1)==']'){
+            return true;
+        }
+        else return false;
+    }
+
     public ArrayList<quad> optimize_unit( int start ){
         SortedSet<Integer> leaders=new TreeSet<Integer>();
         ArrayList<quad> op_quads=new ArrayList<quad>();
@@ -394,11 +401,11 @@ public class middlecode{
                 //
                 //copy propagation
                 //
-                if(x_is_editable(quads.get(j)) && vars_value.get(x)!=null){
+                if(x_is_editable(quads.get(j)) && vars_value.get(x)!=null && !check_array(x)){
                     quads.get(j).x=vars_value.get(x);
                     x=quads.get(j).x;
                 }
-                if(y_is_editable(quads.get(j)) && vars_value.get(y)!=null){
+                if(y_is_editable(quads.get(j)) && vars_value.get(y)!=null && !check_array(y)){
                     quads.get(j).y=vars_value.get(y);
                     y=quads.get(j).y;
                 }
@@ -526,11 +533,10 @@ public class middlecode{
                 //
                 //copy propagation of assignments
                 //
-                if(quads.get(j).op.equals(":=")){
+                if(quads.get(j).op.equals(":=") && !check_array(x) && !check_array(z)){
                     vars_value.put(z,x);
                     vars_value_reverse.put(x,z);
                 }
-
             }
             rhs_hash.clear();
             vars_versions.clear();

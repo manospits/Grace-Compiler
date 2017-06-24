@@ -1,4 +1,0 @@
-0:	unit,hello_0,-,-
-1:	par,"Helloworld!\n",R,-
-2:	call,-,-,puts_0
-3:	endu,hello_0,-,-

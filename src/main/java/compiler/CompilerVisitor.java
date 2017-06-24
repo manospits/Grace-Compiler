@@ -286,7 +286,7 @@ public class CompilerVisitor extends DepthFirstAdapter{
     //PROGRAM OUT
     @Override
     public void outAProgram(AProgram node){
-        //aMiddleCode.print_quads(); // uncomment if you want to print intermediate code
+        aMiddleCode.print_quads(); // uncomment if you want to print intermediate code
         aAssembly.create_assembly_file(String.format("%s.s",Main.filename));
     }
 
