@@ -236,6 +236,64 @@ public class middlecode{
         return true;
     }
 
+    public class operand_number{
+        String operand;
+        int number;
+        public operand_number(String operand,int number){
+            this.operand=operand;
+            this.number=number;
+        }
+
+        @Override
+        public boolean equals(Object o){
+            if(o == this) return true;
+            if(!(o instanceof operand_number)) return false;
+            operand_number b = (operand_number) o;
+            if(operand.equals(b.operand) && number==b.number){
+                return true;
+            }
+            else
+                return false;
+        }
+
+        @Override
+        public int hashCode(){
+            return Objects.hash(operand,number);
+        }
+    }
+
+    public class rhs{
+        String operator;
+        operand_number x;
+        operand_number y;
+        public rhs(String operator, operand_number x,operand_number y){
+            this.operator=operator;
+            this.x=x;
+            this.y=y;
+        }
+
+        @Override
+        public boolean equals(Object o){
+            if(o == this) return true;
+            if(!(o instanceof rhs)) return false;
+            rhs b = (rhs) o;
+            if(operator.equals(b.operator) && x.equals(b.x) && y.equals(b.y)){
+                return true;
+            }
+            else
+                return false;
+        }
+
+        @Override
+        public int hashCode(){
+            return Objects.hash(operator,x,y);
+        }
+
+    }
+
+    Map <rhs,operand_number> rhs_hash = new HashMap< rhs, operand_number >();
+    Map <String,operand_number> vars_versions = new HashMap <String,operand_number>();
+
     public ArrayList<quad> optimize_unit( int start ){
         SortedSet<Integer> leaders=new TreeSet<Integer>();
         ArrayList<quad> op_quads=new ArrayList<quad>();
@@ -272,20 +330,12 @@ public class middlecode{
         Iterator<Integer> prev;
         range b;
         block bl;
-        //while(it.hasNext()){
-            //int from,to;
-            //from=it.next();
-            //System.out.printf("%d,",from);
-        //}
-            //System.out.printf("\n");
-        //it = leaders.iterator();
         int current,previous;
         if(it.hasNext()){
             previous=it.next();
             while(true){
                 int from,to;
                 from=previous;
-                //System.out.printf("%d,",from);
                 if(it.hasNext()){
                     current = it.next();
                     to=current-1;
@@ -304,8 +354,6 @@ public class middlecode{
                 previous=current;
             }
         }
-        //System.out.printf("\n");
-        //System.out.printf("unit %d\n",start);
         int cur_block=0;
         for(block m : blocks){
             quad lastquad=quads.get(m.r.to);
@@ -336,17 +384,6 @@ public class middlecode{
         }
         cur_block=0;
         for(block m : blocks){
-            //System.out.printf("block %d --- from  %d to %d\n",cur_block,m.r.from,m.r.to);
-            //System.out.printf("\tincoming: ");
-            //for(int in:m.incoming){
-                //System.out.printf("%d ",in);
-            //}
-            //System.out.printf("\n");
-            //System.out.printf("\toutcoming: ");
-            //for(int out:m.outcoming){
-                //System.out.printf("%d ",out);
-            //}
-            //System.out.printf("\n");
             cur_block++;
             String op,x,y,z;
             for(int j=m.r.from;j<=m.r.to;j++){
@@ -354,7 +391,9 @@ public class middlecode{
                 x=quads.get(j).x;
                 y=quads.get(j).y;
                 z=quads.get(j).z;
+                //
                 //copy propagation
+                //
                 if(x_is_editable(quads.get(j)) && vars_value.get(x)!=null){
                     quads.get(j).x=vars_value.get(x);
                     x=quads.get(j).x;
@@ -363,27 +402,8 @@ public class middlecode{
                     quads.get(j).y=vars_value.get(y);
                     y=quads.get(j).y;
                 }
-                if(op_assigns_z(quads.get(j)) && (vars_value.get(z)!=null ||vars_value_reverse.get(z)!=null)){
-                    if(vars_value.get(z)!=null){
-                        vars_value_reverse.remove(vars_value.get(z));
-                        vars_value.remove(z);
-                    }else{
-                        vars_value.remove(vars_value_reverse.get(z));
-                        vars_value_reverse.remove(z);
-                    }
-                }
-                if(op_assigns_x(quads.get(j)) && vars_value.get(x)!=null){
-                    if(vars_value.get(x)!=null){
-                        vars_value_reverse.remove(vars_value.get(x));
-                        vars_value.remove(x);
-                    }else{
-                        vars_value.remove(vars_value_reverse.get(x));
-                        vars_value_reverse.remove(x);
-                    }
-
-                }
+                //
                 //algebraic simplification
-                //update quad info variables
                 if(op_is_op(quads.get(j))){
                     int xi,yi; //java ints are always 32 bit
                     if(isInteger(x,10) && isInteger(y,10)){
@@ -412,14 +432,108 @@ public class middlecode{
                         }
                     }
                 }
+                x=quads.get(j).x;
+                y=quads.get(j).y;
+                z=quads.get(j).z;
+                //
+                //common subexpression elimination, a hashtable is used for storing the rhs with the version of its operands
+                //if the current rhs matches a rhs from the hashtable and the corresponding variable is unchanged then
+                //expression is transformed to an assignemnt of the z of the rhs in hash to the z of the current rhs
+                //
+                if(op_is_op(quads.get(j))){
+                    op=quads.get(j).op;
+                    rhs temp_rhs;
+                    operand_number x_temp;
+                    operand_number y_temp;
+                    operand_number z_temp;
+                    operand_number z_temp_rhs;
+                    operand_number z_temp_vars;
+                    if(isInteger(x,10)){
+                        x_temp=new operand_number(x,0);
+                    }
+                    else{
+                        if(vars_versions.get(x)!=null){
+                            x_temp=new operand_number(vars_versions.get(x).operand,vars_versions.get(x).number);
+                        }
+                        else{
+                            x_temp=new operand_number(x,j);
+                            vars_versions.put(x,x_temp);
+                        }
+                    }
+                    if(isInteger(y,10)){
+                        y_temp=new operand_number(y,0);
+                    }
+                    else{
+                        if(vars_versions.get(y)!=null){
+                            y_temp=new operand_number(vars_versions.get(y).operand,vars_versions.get(y).number);
+                        }
+                        else{
+                            y_temp=new operand_number(y,j);
+                            vars_versions.put(y,y_temp);
+                        }
+                    }
+                    z_temp=new operand_number(z,j);
+                    System.out.printf("%d: %s",j,String.format("%s,%s,%s,%s\n",op,x,y,z));
+                    System.out.printf("%s,%s %d, %s %d\n",op,x_temp.operand,x_temp.number,y_temp.operand,y_temp.number);
+                    temp_rhs=new rhs(op,x_temp,y_temp);
+                    if(rhs_hash.get(temp_rhs)!=null){
+                        z_temp_rhs=rhs_hash.get(temp_rhs);
+                        z_temp_vars=vars_versions.get(z_temp_rhs.operand);
+                        if(z_temp_rhs.number==z_temp_vars.number){
+                            quads.get(j).op=":=";
+                            quads.get(j).x=z_temp_rhs.operand;
+                            quads.get(j).y="-";
+                        }
+                        else{
+                            rhs_hash.put(temp_rhs,z_temp);
+                        }
+                    }
+                    else{
+                        rhs_hash.put(temp_rhs,z_temp);
+                    }
+                }
+                //
+                //add the new versions of assigned variables in case of :=,
+                //operation, array, ref, ret etc
+                //update quad info variables also for copy propagation
+                //
+                if(op_assigns_z(quads.get(j))){
+                    if((vars_value.get(z)!=null ||vars_value_reverse.get(z)!=null)){
+                        if(vars_value.get(z)!=null){
+                            vars_value_reverse.remove(vars_value.get(z));
+                            vars_value.remove(z);
+                        }else{
+                            vars_value.remove(vars_value_reverse.get(z));
+                            vars_value_reverse.remove(z);
+                        }
+                    }
+                    operand_number temp =  new operand_number(z,j);
+                    vars_versions.put(z,temp);
+                }
+                if(op_assigns_x(quads.get(j))){
+                    if(vars_value.get(x)!=null||vars_value_reverse.get(z)!=null){
+                        if(vars_value.get(x)!=null){
+                            vars_value_reverse.remove(vars_value.get(x));
+                            vars_value.remove(x);
+                        }else{
+                            vars_value.remove(vars_value_reverse.get(x));
+                            vars_value_reverse.remove(x);
+                        }
+                    }
+                    operand_number temp =  new operand_number(x,j);
+                    vars_versions.put(x,temp);
+                }
+                //
+                //copy propagation of assignments
+                //
                 if(quads.get(j).op.equals(":=")){
-                    x=quads.get(j).x;
-                    z=quads.get(j).z;
                     vars_value.put(z,x);
                     vars_value_reverse.put(x,z);
                 }
-                //System.out.printf("%d:\t%s",j,String.format("%s,%s,%s,%s\n",quads.get(j).op,quads.get(j).x,quads.get(j).y,quads.get(j).z));
+
             }
+            rhs_hash.clear();
+            vars_versions.clear();
             vars_value.clear();
             vars_value_reverse.clear();
         }

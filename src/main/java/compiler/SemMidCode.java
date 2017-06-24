@@ -281,7 +281,7 @@ public class SemMidCode extends DepthFirstAdapter{
     //PROGRAM OUT
     @Override
     public void outAProgram(AProgram node){
-        //aMiddleCode.print_quads();
+        aMiddleCode.print_quads();
         aAssembly.create_assembly_file(String.format("%s.s",Main.filename));
     }
 

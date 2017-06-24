@@ -13,6 +13,12 @@ class Main{
         str=a.substring(0, a.lastIndexOf('.'));
         return str;
     }
+    public static String getGrace(String a){
+        String str;
+        str=a.substring(a.lastIndexOf('.')+1);
+        return str;
+    }
+
     public static void main(String[] arguments){
         try{
             File initialFile=null;
@@ -25,8 +31,14 @@ class Main{
                     optimize=true;
                 }
                 else{
-                    initialFile = new File(str);
-                    filename=stripGrace(str);
+                    if( str.lastIndexOf('.') != -1 || getGrace(str).equals("grace") || getGrace(str).equals("grc")){
+                        initialFile = new File(str);
+                        filename=stripGrace(str);
+                    }
+                    else{
+                        System.out.printf("Error wrong type of source, expected <name>.[grc,grace] found \"%s\"\n",str);
+                        System.exit(2);
+                    }
                 }
             }
             if(arguments.length==2 && optimize ==false ){
