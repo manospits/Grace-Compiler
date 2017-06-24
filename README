@@ -21,4 +21,6 @@
     grccomp <grace_program>.grc/grace lib.s
     .\<grace_program>
 
+## Printing middlecode
+    to print middlecode uncomment line 289 in src/main/java/compiler/CompilerVisitor.java
 

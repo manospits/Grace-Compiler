@@ -401,11 +401,11 @@ public class middlecode{
                 //
                 //copy propagation
                 //
-                if(x_is_editable(quads.get(j)) && vars_value.get(x)!=null && !check_array(x)){
+                if(x_is_editable(quads.get(j)) && vars_value.get(x)!=null ){
                     quads.get(j).x=vars_value.get(x);
                     x=quads.get(j).x;
                 }
-                if(y_is_editable(quads.get(j)) && vars_value.get(y)!=null && !check_array(y)){
+                if(y_is_editable(quads.get(j)) && vars_value.get(y)!=null ){
                     quads.get(j).y=vars_value.get(y);
                     y=quads.get(j).y;
                 }
