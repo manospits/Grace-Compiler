@@ -98,7 +98,6 @@ puti_0:
     # Call printf()
     call printf
 
-    call abs
     add esp,8
 
     mov esp, ebp
