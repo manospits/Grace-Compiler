@@ -12,7 +12,7 @@ public class CompilerVisitor extends DepthFirstAdapter{
     assembly aAssembly = new assembly();
     String error,function_name;
     int string_dim=1;
-    Pattern p = Pattern.compile("[a-zA-Z_\\d]_(\\d+)$"); //used for getting depth from a function name
+    Pattern p = Pattern.compile("([a-zA-Z_\\d]+)_(\\d+)$"); //used for getting depth from a function name
 
     class type_info{
         int line,pos;
@@ -122,11 +122,17 @@ public class CompilerVisitor extends DepthFirstAdapter{
     public int get_depth_fname(String fun){
         Matcher m = p.matcher(fun);
         m.find();
-        String num=m.group(1);
+        String num=m.group(2);
         //System.out.printf("%s\n",num);
         return Integer.parseInt(num);
     }
 
+    public String getfunname(String fun){
+        Matcher m = p.matcher(fun);
+        m.find();
+        //System.out.printf("name : %s\n",m.group(1));
+        return m.group(1);
+    }
     public boolean  check_array(String a){
         if(a.charAt(0)=='[' && a.charAt(a.length()-1)==']'){
             return true;
@@ -476,7 +482,6 @@ public class CompilerVisitor extends DepthFirstAdapter{
             aAssembly.add_comm("ret","","",true);
         }
         middlecode.quad aQuad;
-        ArrayList<middlecode.quad> parameters=new ArrayList<middlecode.quad>();
         middlecode.quad ret_par=null;
         int size,cur_depth=0,call_depth;
         size=aMiddleCode.get_start_address();
@@ -502,38 +507,28 @@ public class CompilerVisitor extends DepthFirstAdapter{
                 aAssembly.add_comm("ret","","",true);
             }
             else if (aQuad.op.equals("par")){
-                if(aQuad.y.equals("RET")){
-                    ret=true;
-                    ret_par=aQuad;
+                if(!aQuad.y.equals("V")){
+                    load_addr("esi",aQuad.x,cur_depth,ret_type);
+                    aAssembly.add_comm("push","esi","",true);
                 }
                 else{
-                    parameters.add(aQuad);
+                    load("eax",aQuad.x,cur_depth,ret_type);
+                    aAssembly.add_comm("push","eax","",true);
                 }
             }
             else if (aQuad.op.equals("call")){
-                int par_size=parameters.size();
-                for(int j = par_size-1;j>=0;j--){
-                    middlecode.quad q=parameters.get(j);
-                    if(q.y.equals("V")){
-                        load("eax",q.x,cur_depth,ret_type);
-                        aAssembly.add_comm("push","eax","",true);
-                    }
-                    else{
-                        load_addr("esi",q.x,cur_depth,ret_type);
-                        aAssembly.add_comm("push","esi","",true);
-                    }
-                }
-                parameters.clear();
+                int par_size;
                 call_depth = get_depth_fname(aQuad.z);
-                if(ret==true){
-                    ret=false;
-                    load_addr("esi",ret_par.x,cur_depth,ret_type);
-                    aAssembly.add_comm("push","esi","",true);
-                }else{
+                SymbolTable.SymbolTableRecord foundSymbol = aSymbolTable.lookup(getfunname(aQuad.z));
+                if(foundSymbol.ret_type.equals("nothing")){
                     aAssembly.add_comm("sub","esp","4",true);
                 }
                 aAssembly.updateAl(cur_depth,call_depth);
                 aAssembly.add_comm("call",aQuad.z,"",true);
+                par_size=0;
+                for (argument a :foundSymbol.arg_types){
+                    par_size+=a.ids.size();
+                }
                 aAssembly.add_comm("add","esp",String.format("%s",8+(par_size*4)),true);
             }
             else if(aQuad.op.equals(":=")){
@@ -1611,32 +1606,41 @@ public class CompilerVisitor extends DepthFirstAdapter{
                 }
             }
             List<PExpr> copy = new ArrayList<PExpr>(node.getExpr());
-            int arg_index = 0,arg_elements=0,i=0;
+            int arg_index,arg_elements=0,i=0,l;
             argument temp;
             type_info arg,argf;
             for(PExpr e : copy)
             {
                 e.apply(this);
+            }
+            arg_index=foundSymbol.arg_types.size()-1;
+            if(arg_index>=0)
+                arg_elements = foundSymbol.arg_types.get(arg_index).ids.size();
+            i=0;
+            for(argument a:foundSymbol.arg_types){
+                i+=a.ids.size();
+            }
+            for(l=0;l<copy.size();l++){
                 arg = type_stack.remove(type_stack.size()-1);
                 temp = foundSymbol.arg_types.get(arg_index);
                 argf = new type_info(0,0,temp.Type,temp.Type,temp.array_sizes.size(),0,false,null);
                 if(temp.ref && arg.Type.equals("int_const")){
-                    error = String.format("expected <%s> (%d) ,found \"%s\" <%s> (%d) in argument (%d) of function \"%s\"",argf.Type,argf.array_max_dim-argf.array_cur_dim,arg.name,arg.Type,arg.array_max_dim-arg.array_cur_dim,i+1,foundSymbol.name);
+                    error = String.format("expected <%s> (%d) ,found \"%s\" <%s> (%d) in argument (%d) of function \"%s\"",argf.Type,argf.array_max_dim-argf.array_cur_dim,arg.name,arg.Type,arg.array_max_dim-arg.array_cur_dim,i,foundSymbol.name);
                     aSymbolTable.print_error(arg.line,arg.pos,error);
                 }
                 else if(temp.ref && arg.Type.equals("char_const")){
-                    error = String.format("expected <%s> (%d) ,found \"%s\" <%s> (%d) in argument (%d) of function \"%s\"",argf.Type,argf.array_max_dim-argf.array_cur_dim,arg.name,arg.Type,arg.array_max_dim-arg.array_cur_dim,i+1,foundSymbol.name);
+                    error = String.format("expected <%s> (%d) ,found \"%s\" <%s> (%d) in argument (%d) of function \"%s\"",argf.Type,argf.array_max_dim-argf.array_cur_dim,arg.name,arg.Type,arg.array_max_dim-arg.array_cur_dim,i,foundSymbol.name);
                     aSymbolTable.print_error(arg.line,arg.pos,error);
                 }
                 if(!equiv(arg,argf)){
-                    error = String.format("expected <%s> (%d) ,found \"%s\" <%s> (%d) in argument (%d) of function \"%s\"",argf.Type,argf.array_max_dim-argf.array_cur_dim,arg.name,arg.Type,arg.array_max_dim-arg.array_cur_dim,i+1,foundSymbol.name);
+                    error = String.format("expected <%s> (%d) ,found \"%s\" <%s> (%d) in argument (%d) of function \"%s\"",argf.Type,argf.array_max_dim-argf.array_cur_dim,arg.name,arg.Type,arg.array_max_dim-arg.array_cur_dim,i,foundSymbol.name);
                     aSymbolTable.print_error(arg.line,arg.pos,error);
                 }
                 else{
                     if(arg.array_max_dim-arg.array_cur_dim!=0){
                         for(int j=0;j<temp.array_sizes.size();j++){
                             if(arg.array_sizes.get(j+arg.array_cur_dim)>temp.array_sizes.get(j) && temp.array_sizes.get(j)!=-1){
-                                error = String.format("array size %d (%d) is bigger than %d (%d) of array found in argument (%d) of function \"%s\"",arg.array_sizes.get(j+arg.array_cur_dim),j+arg.array_cur_dim+1,temp.array_sizes.get(j),j+1,i+1,foundSymbol.name);
+                                error = String.format("array size %d (%d) is bigger than %d (%d) of array found in argument (%d) of function \"%s\"",arg.array_sizes.get(j+arg.array_cur_dim),j+arg.array_cur_dim+1,temp.array_sizes.get(j),j+1,i,foundSymbol.name);
                                 aSymbolTable.print_error(arg.line,arg.pos,error);
                             }
                         }
@@ -1656,12 +1660,13 @@ public class CompilerVisitor extends DepthFirstAdapter{
                     aMiddleCode.genquad("par",place,"V","-");
                 }
                 //middlecode end
-                arg_elements++;
-                if(arg_elements == foundSymbol.arg_types.get(arg_index).ids.size()){
-                    arg_elements=0;
-                    arg_index++;
+                arg_elements--;
+                if(arg_elements == 0){
+                    arg_index--;
+                    if(arg_index>=0)
+                        arg_elements = foundSymbol.arg_types.get(arg_index).ids.size();
                 }
-                i++;
+                i--;
             }
             type_info return_type = new type_info(node.getTId().getLine(),node.getTId().getPos(),node.getTId().toString().trim(),foundSymbol.ret_type,0,0,false,null);
             type_stack.add(return_type);
